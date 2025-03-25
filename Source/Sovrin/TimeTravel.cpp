@@ -3,10 +3,16 @@
 
 #include "TimeTravel.h"
 
-TimeTravel::TimeTravel()
+ATimeTravel::ATimeTravel()
 {
 }
 
-TimeTravel::~TimeTravel()
+void ATimeTravel::BeginPlay()
 {
+	UE_LOG(LogTemp,Warning,TEXT("Hello world"));
+}
+
+ATimeTravel::~ATimeTravel()
+{
+	
 }
