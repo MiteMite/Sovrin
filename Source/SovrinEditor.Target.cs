@@ -9,7 +9,8 @@ public class SovrinEditorTarget : TargetRules
 	{
 		Type = TargetType.Editor;
 		DefaultBuildSettings = BuildSettingsVersion.V5;
-
+		
 		ExtraModuleNames.AddRange( new string[] { "Sovrin" } );
+		IncludeOrderVersion = EngineIncludeOrderVersion.Latest;
 	}
 }

@@ -1,21 +1,21 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Components/ActorComponent.h"
 #include "TimeTravel.generated.h"
 
 /**
  * 
  */
 UCLASS()
-class SOVRIN_API ATimeTravel : public AActor
+class SOVRIN_API UTimeTravel : public UActorComponent
 {
 	GENERATED_BODY()
 public:
-	ATimeTravel();
+	UTimeTravel();
 	
 protected:
 	virtual void BeginPlay() override;
 
-	virtual ~ATimeTravel() override;
+	virtual ~UTimeTravel() override;
 };
