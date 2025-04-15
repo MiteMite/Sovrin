@@ -27,23 +27,22 @@ UCLASS()
 class SOVRIN_API ATimeTravelGlobal : public AGameModeBase
 {
 	GENERATED_BODY()
-ATimeTravelGlobal();
 	
-public:
+/*public:
+	ATimeTravelGlobal();
 	bool IsGlobalRewinding();		//Currently rewinding time
 	bool IsGlobalFastForward();	//currently  Fast forwarding time
 	bool IsGlobalTimeScrubbing(); //currently moving the timeline in any direction
 	void RecordSnapshotGlobal();	//Function to record current transform
 	void PlaySnapshotsGlobal(float DeltaTime, bool bRewinding); //Play recorded snapshots at a certain rate of time
-	void PauseTimeGlobal(float De1ltaTime, bool bRewinding); //Pause all movement in the game
+	void PauseTimeGlobal(float DeltaTime, bool bRewinding); //Pause all movement in the game
 
-public:
-	//virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	
 private:
 	void FGlobalOnTimeTravelStarted(); //begin state
 	void FGlobalOnTimeTravelEnded();	//end state
 	TRingBuffer<FGlobalTransformAndVelocitySnapshot> GlobalTransformAndVelocitySnapshots;
 	TRingBuffer<FGlobalMovementVelocityAndModeSnapshot> GlobalMovementVelocityAndModeSnapshots;
-	
+
+protected:
+	virtual ~ATimeTravelGlobal() override; //destructor*/
 };
