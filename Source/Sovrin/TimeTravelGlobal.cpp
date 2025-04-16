@@ -2,3 +2,13 @@
 
 
 #include "TimeTravelGlobal.h"
+
+ATimeTravelGlobal::ATimeTravelGlobal()
+{
+	
+}
+
+ATimeTravelGlobal::~ATimeTravelGlobal()
+{
+	
+}

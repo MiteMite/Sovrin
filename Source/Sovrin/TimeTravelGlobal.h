@@ -28,7 +28,7 @@ class SOVRIN_API ATimeTravelGlobal : public AGameModeBase
 {
 	GENERATED_BODY()
 	
-/*public:
+public:
 	ATimeTravelGlobal();
 	bool IsGlobalRewinding();		//Currently rewinding time
 	bool IsGlobalFastForward();	//currently  Fast forwarding time
