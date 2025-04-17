@@ -36,7 +36,8 @@ public:
 	void RecordSnapshotGlobal();	//Function to record current transform
 	void PlaySnapshotsGlobal(float DeltaTime, bool bRewinding); //Play recorded snapshots at a certain rate of time
 	void PauseTimeGlobal(float DeltaTime, bool bRewinding); //Pause all movement in the game
-
+	
+	
 private:
 	void FGlobalOnTimeTravelStarted(); //begin state
 	void FGlobalOnTimeTravelEnded();	//end state

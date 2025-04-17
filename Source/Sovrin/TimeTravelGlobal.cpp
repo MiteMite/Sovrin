@@ -3,9 +3,12 @@
 
 #include "TimeTravelGlobal.h"
 
+#include "Saoirse.h"
+#include "SWarningOrErrorBox.h"
+
 ATimeTravelGlobal::ATimeTravelGlobal()
 {
-	
+	DefaultPawnClass= ASaoirse::StaticClass();
 }
 
 ATimeTravelGlobal::~ATimeTravelGlobal()
