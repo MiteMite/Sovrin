@@ -42,7 +42,6 @@ void ASaoirse::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "MoveForward");
 	UE_LOG(LogTemp, Display, TEXT("MoveForward"));
 }
 
