@@ -7,7 +7,9 @@
 ASaoirse::ASaoirse()
 {
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext> InputMappingContextObject(TEXT("/Game/SovrinClasses/InputMapping/IMC_Base.IMC_Base"));
-	UE_LOG(LogTemp, Display, TEXT("ASaoirse::ASaoirse()"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> UInputActionObject(TEXT("/Game/SovrinClasses/InputMapping/IA_Walk.IA_Walk"));
+	InputMapping=InputMappingContextObject.Object;
+	InputAction = UInputActionObject.Object;
 }
 
 void ASaoirse::Tick(float DeltaSeconds)
