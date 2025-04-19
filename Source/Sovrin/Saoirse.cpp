@@ -3,13 +3,17 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "Net/Iris/ReplicationSystem/ReplicationSystemUtil.h"
+#include "Rendering/RenderCommandPipes.h"
 
 ASaoirse::ASaoirse()
 {
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext> InputMappingContextObject(TEXT("/Game/SovrinClasses/InputMapping/IMC_Base.IMC_Base"));
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputActionObject(TEXT("/Game/SovrinClasses/InputMapping/IA_Walk.IA_Walk"));
-	InputMapping=InputMappingContextObject.Object;
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> USkeletalMeshObject(TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny.SKM_Manny"));
+
+	InputMapping = InputMappingContextObject.Object;
 	InputAction = UInputActionObject.Object;
+	this->GetMesh()->SetSkeletalMeshAsset(USkeletalMeshObject.Object);
 }
 
 void ASaoirse::Tick(float DeltaSeconds)
@@ -43,6 +47,7 @@ void ASaoirse::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 {
 	UE_LOG(LogTemp, Display, TEXT("MoveForward"));
+	
 }
 
 ASaoirse::~ASaoirse()

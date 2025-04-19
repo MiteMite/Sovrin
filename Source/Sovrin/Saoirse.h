@@ -31,4 +31,5 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
 	class UInputAction* InputAction;
+	
 };
