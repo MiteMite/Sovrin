@@ -47,7 +47,7 @@ void ASaoirse::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 {
 	UE_LOG(LogTemp, Display, TEXT("MoveForward"));
-	
+	this->GetMovementComponent()->AddInputVector(Inst.GetValue().Get<FVector>());
 }
 
 ASaoirse::~ASaoirse()
