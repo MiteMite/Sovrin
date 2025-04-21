@@ -8,14 +8,21 @@
 
 UTimeTravel::UTimeTravel()
 {
-	PrimaryComponentTick.bCanEverTick=true;
+	//PrimaryComponentTick.bCanEverTick=true;
 	
 }
 
+void UTimeTravel::BeginPlay()
+{
+	Super::BeginPlay();
+	SnapshotTriggered.AddDynamic(this,&UTimeTravel::RecordSnapshot);
+	SnapshotTriggered.Broadcast(0.4f);
+}
+
+
 void UTimeTravel::RecordSnapshot(float DeltaTime)
 {
-	TransformAndVelocitySnapshots.Add(FTransformAndVelocitySnapshot(DeltaTime,GetOwner()->GetTransform(),GetOwner()->GetVelocity()));
-	UE_LOG(LogTemp,Warning,TEXT("%s"),*TransformAndVelocitySnapshots.First().Transform.ToString());
+	UE_LOG(LogTemp, Display, TEXT("%s"),*GetOwner()->GetTransform().GetLocation().ToString());
 }
 
 UTimeTravel::~UTimeTravel()

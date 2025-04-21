@@ -3,8 +3,6 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "TimeTravel.h"
-#include "Net/Iris/ReplicationSystem/ReplicationSystemUtil.h"
-#include "Rendering/RenderCommandPipes.h"
 
 ASaoirse::ASaoirse()
 {
@@ -17,6 +15,7 @@ ASaoirse::ASaoirse()
 	InputAction = UInputActionObject.Object;
 	InputRewind = UInputRewindObject.Object;
 	this->GetMesh()->SetSkeletalMeshAsset(USkeletalMeshObject.Object);
+	TimeTravelComponent = CreateDefaultSubobject<UTimeTravel>(TEXT("TimeTravel"));
 }
 
 void ASaoirse::Tick(float DeltaSeconds)
@@ -56,8 +55,11 @@ void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 
 void ASaoirse::RewindTime(const FInputActionInstance& Inst)
 {
-	//FRecordSnapshot().Broadcast();
-	UE_LOG(LogTemp, Display, TEXT("My Current Transform is %s"),*GetTransform().ToString());
+	if (TimeTravelComponent!=nullptr)
+	{
+		TimeTravelComponent->SnapshotTriggered.Broadcast(0.4f);
+	}
+	//UE_LOG(LogTemp, Display, TEXT("My Current Transform is %s"),*GetTransform().ToString());
 }
 
 ASaoirse::~ASaoirse()

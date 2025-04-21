@@ -7,6 +7,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
 #include "InputActionValue.h"
+#include "TimeTravel.h"
 #include "Saoirse.generated.h"
 
 UCLASS()
@@ -19,6 +20,9 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
+	
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UTimeTravel* TimeTravelComponent;
 
 private:
 	void MoveForward(const FInputActionInstance& Inst);
