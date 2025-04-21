@@ -15,7 +15,9 @@ USTRUCT()
 struct FGlobalTransformAndVelocitySnapshot
 {
 	GENERATED_BODY()
+	FTransform LocalActorTransform;
 	
+	float LocalActorVelocity;
 };
 USTRUCT()
 struct FGlobalMovementVelocityAndModeSnapshot

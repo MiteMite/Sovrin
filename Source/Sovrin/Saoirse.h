@@ -22,6 +22,7 @@ public:
 
 private:
 	void MoveForward(const FInputActionInstance& Inst);
+	void RewindTime(const FInputActionInstance& Inst);
 	
 protected:
 	virtual ~ASaoirse() override;
@@ -32,4 +33,6 @@ protected:
 	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
 	class UInputAction* InputAction;
 	
+	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+	class UInputAction* InputRewind;
 };
