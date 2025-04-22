@@ -13,7 +13,6 @@
  * taken and the state of the timeline.
  */
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRecordSnapshot,float,DeltaTime);
-
 USTRUCT()
 struct FTransformAndVelocitySnapshot
 {
@@ -23,7 +22,6 @@ struct FTransformAndVelocitySnapshot
 	FVector LinearVelocity = FVector::ZeroVector;
 	FVector AngularVelocityInRadians = FVector::ZeroVector;
 };
-
 USTRUCT()
 struct FMovementVelocityAndModeSnapshot
 {
@@ -43,17 +41,13 @@ public:
 	bool IsRewinding();		//Currently rewinding time
 	bool IsFastForward();	//currently  Fast forwarding time
 	bool IsTimeScrubbing(); //currently moving the timeline in any direction
-	
 	UFUNCTION()
 	void RecordSnapshot(float DeltaTime);	//Function to record current transform
-	
 	void PlaySnapshots(float DeltaTime, bool bRewinding); //Play recorded snapshots at a certain rate of time
 	void PauseTime(float DeltaTime, bool bRewinding); //Pause all movement in the game
-	//void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
+	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
 	UPROPERTY(BlueprintAssignable)
 	FRecordSnapshot SnapshotTriggered;
-	
 private:
 	void FOnTimeTravelStarted(); //begin state
 	void FOnTimeTravelEnded();	//end state
@@ -62,9 +56,7 @@ private:
 	USkeletalMeshComponent* OwnerSkeletalMeshComponent;
 	TRingBuffer<FTransformAndVelocitySnapshot> TransformAndVelocitySnapshots;
 	TRingBuffer<FMovementVelocityAndModeSnapshot> MovementVelocityAndModeSnapshots;
-	
 protected:
-
 	virtual ~UTimeTravel() override; //destructor
 };
 
