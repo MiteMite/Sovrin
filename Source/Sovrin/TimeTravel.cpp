@@ -3,9 +3,14 @@
 
 #include "TimeTravel.h"
 
+#include "AssetTypeCategories.h"
 #include "ComponentUtils.h"
 #include "MaterialHLSLTree.h"
+#include "Saoirse.h"
+#include "Engine/World.h"
 #include "TimeTravelGlobal.h"
+#include "Kismet/GameplayStatics.h"
+
 
 UTimeTravel::UTimeTravel()
 {
@@ -16,6 +21,7 @@ UTimeTravel::UTimeTravel()
 void UTimeTravel::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
+
 	RecordSnapshot(DeltaTime);
 	PlaySnapshots(DeltaTime,IsRewinding);
 }
@@ -23,6 +29,18 @@ void UTimeTravel::TickComponent(float DeltaTime, enum ELevelTick TickType, FActo
 void UTimeTravel::BeginPlay()
 {
 	Super::BeginPlay();
+	TArray<AActor*> ActorsInWorld;
+	UWorld* World = GetWorld();
+	UGameplayStatics::GetAllActorsOfClass(World,AActor::StaticClass(),ActorsInWorld);
+	for (AActor* Actor : ActorsInWorld)
+	{
+		if (Actor->GetComponentByClass(UTimeTravel::StaticClass())!=nullptr)
+		{
+			Actor->FindComponentByClass<UTimeTravel>()->OnTimeTravelStarted.AddDynamic(this,&UTimeTravel::FOnTimeTravelStarted);
+			Actor->FindComponentByClass<UTimeTravel>()->OnTimeTravelEnded.AddDynamic(this,&UTimeTravel::FOnTimeTravelEnded);
+			UE_LOG(LogTemp, Display, TEXT("Actor is %s"),*Actor->GetName());
+		}
+	}
 	OnTimeTravelStarted.AddDynamic(this,&UTimeTravel::FOnTimeTravelStarted);
 	OnTimeTravelEnded.AddDynamic(this,&UTimeTravel::FOnTimeTravelEnded);
 }
@@ -37,7 +55,7 @@ void UTimeTravel::RecordSnapshot(float DeltaTime)
 			TransformAndVelocitySnapshots.First().TimeSinceLastSnapshot+=DeltaTime;
 			if (TransformAndVelocitySnapshots.First().TimeSinceLastSnapshot>=(1.0f/30.0f))//record at 30 frames per second
 			{
-				if (TransformAndVelocitySnapshots.Num()>=1000)//ensure that the ring buffer does not go over a certain size
+				if (TransformAndVelocitySnapshots.Num()>=3000)//ensure that the ring buffer does not go over a certain size
 				{
 					TransformAndVelocitySnapshots.RemoveAt(0);
 					//UE_LOG(LogTemp, Display, TEXT("Removing oldest snapshot"));

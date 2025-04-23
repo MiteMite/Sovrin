@@ -3,6 +3,7 @@
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "TimeTravel.h"
+#include "ToolBuilderUtil.h"
 
 ASaoirse::ASaoirse()
 {
@@ -58,6 +59,7 @@ void ASaoirse::RewindTime(const FInputActionInstance& Inst)
 {
 	if (Inst.GetTriggerEvent()==ETriggerEvent::Started)
 	{
+		
 		if (TimeTravelComponent!=nullptr)
 		{
 			UE_LOG(LogTemp, Display, TEXT("Started Rewinding time"));
