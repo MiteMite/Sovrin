@@ -43,6 +43,7 @@ public:
 	bool IsRewinding = false;		//Currently rewinding time
 	bool IsFastForwarding = false;	//currently fast forwarding time
 	bool IsTimeScrubbing = false; //currently moving the timeline in any direction
+	float PlaybackSpeed = 1.0f;	//speed of playback
 	void RecordSnapshot(float DeltaTime);	//Function to record current transform
 	void PlaySnapshots(float DeltaTime, bool bRewinding); //Play recorded snapshots at a certain rate of time
 	void PauseTime(float DeltaTime, bool bRewinding); //Pause all movement in the game

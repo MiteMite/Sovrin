@@ -42,20 +42,21 @@ void ASaoirse::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 	if (UEnhancedInputComponent* Input = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		Input->BindAction(InputAction,ETriggerEvent::Triggered, this, &ASaoirse::MoveForward);
-		Input->BindAction(InputRewind,ETriggerEvent::Triggered, this, &ASaoirse::RewindTime);
+		Input->BindAction(InputRewind,ETriggerEvent::Started, this, &ASaoirse::RewindTime);
+		Input->BindAction(InputRewind,ETriggerEvent::Completed, this, &ASaoirse::RewindTime);
 	}
 	
 }
 
 void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 {
-	UE_LOG(LogTemp, Display, TEXT("MoveForward"));
+	//UE_LOG(LogTemp, Display, TEXT("MoveForward"));
 	this->GetMovementComponent()->AddInputVector(Inst.GetValue().Get<FVector>());
 }
 
 void ASaoirse::RewindTime(const FInputActionInstance& Inst)
 {
-	if (Inst.GetTriggerEvent()==ETriggerEvent::Triggered)
+	if (Inst.GetTriggerEvent()==ETriggerEvent::Started)
 	{
 		if (TimeTravelComponent!=nullptr)
 		{
