@@ -12,7 +12,9 @@
  * game object at the moment a snapshot is
  * taken and the state of the timeline.
  */
-DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FRecordSnapshot,float,DeltaTime);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTimeTravelStarted);
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTimeTravelEnded);
+
 USTRUCT()
 struct FTransformAndVelocitySnapshot
 {
@@ -38,19 +40,21 @@ class SOVRIN_API UTimeTravel : public UActorComponent
 public:
 	UTimeTravel(); //constructor
 	virtual void BeginPlay() override;
-	bool IsRewinding();		//Currently rewinding time
-	bool IsFastForward();	//currently  Fast forwarding time
-	bool IsTimeScrubbing(); //currently moving the timeline in any direction
-	UFUNCTION()
+	bool IsRewinding = false;		//Currently rewinding time
+	bool IsFastForwarding = false;	//currently fast forwarding time
+	bool IsTimeScrubbing = false; //currently moving the timeline in any direction
 	void RecordSnapshot(float DeltaTime);	//Function to record current transform
 	void PlaySnapshots(float DeltaTime, bool bRewinding); //Play recorded snapshots at a certain rate of time
 	void PauseTime(float DeltaTime, bool bRewinding); //Pause all movement in the game
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-	UPROPERTY(BlueprintAssignable)
-	FRecordSnapshot SnapshotTriggered;
-private:
+	FOnTimeTravelStarted OnTimeTravelStarted;
+	UFUNCTION()
 	void FOnTimeTravelStarted(); //begin state
+	FOnTimeTravelEnded OnTimeTravelEnded;
+	UFUNCTION()
 	void FOnTimeTravelEnded();	//end state
+private:
+	
 	UPrimitiveComponent* OwnerRootComponent;
 	UCharacterMovementComponent* OwnerMovementComponent; 
 	USkeletalMeshComponent* OwnerSkeletalMeshComponent;

@@ -55,10 +55,23 @@ void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 
 void ASaoirse::RewindTime(const FInputActionInstance& Inst)
 {
-	if (TimeTravelComponent!=nullptr)
+	if (Inst.GetTriggerEvent()==ETriggerEvent::Triggered)
 	{
-		TimeTravelComponent->SnapshotTriggered.Broadcast(0.4f);
+		if (TimeTravelComponent!=nullptr)
+		{
+			UE_LOG(LogTemp, Display, TEXT("Started Rewinding time"));
+			TimeTravelComponent->OnTimeTravelStarted.Broadcast();
+		}
 	}
+	if (Inst.GetTriggerEvent()==ETriggerEvent::Completed)
+	{
+		if (TimeTravelComponent!=nullptr)
+		{
+			UE_LOG(LogTemp, Display, TEXT("Stopped Rewinding time"));
+			TimeTravelComponent->OnTimeTravelEnded.Broadcast();
+		}
+	}
+
 	//UE_LOG(LogTemp, Display, TEXT("My Current Transform is %s"),*GetTransform().ToString());
 }
 

@@ -22,8 +22,8 @@ void UTimeTravel::TickComponent(float DeltaTime, enum ELevelTick TickType, FActo
 void UTimeTravel::BeginPlay()
 {
 	Super::BeginPlay();
-	SnapshotTriggered.AddDynamic(this,&UTimeTravel::RecordSnapshot);
-	SnapshotTriggered.Broadcast(0.4f);
+	OnTimeTravelStarted.AddDynamic(this,&UTimeTravel::FOnTimeTravelStarted);
+	OnTimeTravelEnded.AddDynamic(this,&UTimeTravel::FOnTimeTravelEnded);
 }
 
 
@@ -37,21 +37,52 @@ void UTimeTravel::RecordSnapshot(float DeltaTime)
 			if (TransformAndVelocitySnapshots.Num()>50)//ensure that the ring buffer does not go over a certain size
 			{
 				TransformAndVelocitySnapshots.RemoveAt(0);
-				UE_LOG(LogTemp, Display, TEXT("Removing oldest snapshot"));
+				//UE_LOG(LogTemp, Display, TEXT("Removing oldest snapshot"));
 			}
 			else
 			{
 				TransformAndVelocitySnapshots.Add(FTransformAndVelocitySnapshot(DeltaTime,GetOwner()->GetTransform(),GetOwner()->GetVelocity()));
-				UE_LOG(LogTemp, Display, TEXT("Adding new snapshot after %f"),TransformAndVelocitySnapshots.Last().TimeSinceLastSnapshot);
-				TransformAndVelocitySnapshots.First().TimeSinceLastSnapshot=0.0f;
+				//UE_LOG(LogTemp, Display, TEXT("Adding new snapshot after %f"),TransformAndVelocitySnapshots.Last().TimeSinceLastSnapshot);
+				//TransformAndVelocitySnapshots.First().TimeSinceLastSnapshot=0.0f;
 			}
 		}
 	}
 	else
 	{
 		TransformAndVelocitySnapshots.Add(FTransformAndVelocitySnapshot(DeltaTime,GetOwner()->GetTransform(),GetOwner()->GetVelocity()));
-		UE_LOG(LogTemp, Display, TEXT("Adding new snapshot if buffer is empty"));
+		//UE_LOG(LogTemp, Display, TEXT("Adding new snapshot if buffer is empty"));
 	}
+}
+
+void UTimeTravel::PlaySnapshots(float DeltaTime, bool bRewinding)
+{
+	if (!TransformAndVelocitySnapshots.IsEmpty())
+	{
+		if (bRewinding)
+		{
+			for (int32 i=0;i<TransformAndVelocitySnapshots.Num();i++)
+			{
+				
+			}
+		}
+	}
+}
+
+void UTimeTravel::FOnTimeTravelStarted()
+{
+	IsRewinding = true;
+	IsFastForwarding = false;
+	IsTimeScrubbing = false;
+}
+
+void UTimeTravel::FOnTimeTravelEnded()
+{
+	IsRewinding = false;
+}
+
+void UTimeTravel::PauseTime(float DeltaTime, bool bRewinding)
+{
+	
 }
 
 UTimeTravel::~UTimeTravel()
