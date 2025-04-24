@@ -8,6 +8,8 @@
 #include "InputMappingContext.h"
 #include "InputActionValue.h"
 #include "TimeTravel.h"
+#include "Camera/CameraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
 #include "Saoirse.generated.h"
 
 UCLASS()
@@ -25,7 +27,10 @@ public:
 	UTimeTravel* TimeTravelComponent;
 
 private:
+	USpringArmComponent* SpringCam;
+	UCameraComponent* Camera;
 	void MoveForward(const FInputActionInstance& Inst);
+	void MoveRight(const FInputActionInstance& Inst);
 	void RewindTime(const FInputActionInstance& Inst);
 	
 protected:
@@ -35,7 +40,10 @@ protected:
 	class UInputMappingContext* InputMapping;
 
 	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
-	class UInputAction* InputAction;
+	class UInputAction* InputForwardAction;
+
+	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+	class UInputAction* InputRightAction;
 	
 	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
 	class UInputAction* InputRewind;
