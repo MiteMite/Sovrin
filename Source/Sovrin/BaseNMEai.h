@@ -2,6 +2,7 @@
 #include "AIController.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
+#include "Perception/PawnSensingComponent.h"
 #include "BaseNMEai.generated.h"
 
 UCLASS()
@@ -13,8 +14,12 @@ public:
 	
 	UFUNCTION()
 	void OnTargetSighted(const TArray<AActor*>& Targets);
+	UFUNCTION()
+	void OnPawnSighted(APawn* SpottedPawn);
 	
 private:
+	UPROPERTY(EditAnywhere, Category = "Components")
+	UPawnSensingComponent* NMEPawnSensingComponent;
 	UPROPERTY(EditAnywhere, Category = "Components")
 	UAIPerceptionComponent* NMEPerceptionComponent;
 	UPROPERTY(EditAnywhere, Category = "AI")
