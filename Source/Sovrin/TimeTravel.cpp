@@ -38,7 +38,7 @@ void UTimeTravel::BeginPlay()
 		{
 			Actor->FindComponentByClass<UTimeTravel>()->OnTimeTravelStarted.AddDynamic(this,&UTimeTravel::FOnTimeTravelStarted);
 			Actor->FindComponentByClass<UTimeTravel>()->OnTimeTravelEnded.AddDynamic(this,&UTimeTravel::FOnTimeTravelEnded);
-			UE_LOG(LogTemp, Display, TEXT("Actor is %s"),*Actor->GetName());
+			//UE_LOG(LogTemp, Display, TEXT("Actor is %s"),*Actor->GetName());
 		}
 	}
 	OnTimeTravelStarted.AddDynamic(this,&UTimeTravel::FOnTimeTravelStarted);

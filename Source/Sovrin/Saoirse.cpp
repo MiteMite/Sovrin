@@ -42,6 +42,9 @@ ASaoirse::ASaoirse()
 	// Configure the CameraComponent
 	Camera->bUsePawnControlRotation = false; // Do not rotate the camera with the pawn
 	SpringCam->SetRelativeRotation(FRotator(-80.0f, 0.0f, 0.0f));
+
+	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSource"));
+	StimuliSource->RegisterForSense(UAISense_Sight::StaticClass());
 }
 
 void ASaoirse::Tick(float DeltaSeconds)
@@ -72,7 +75,6 @@ void ASaoirse::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		Input->BindAction(InputRewind,ETriggerEvent::Started, this, &ASaoirse::RewindTime);
 		Input->BindAction(InputRewind,ETriggerEvent::Completed, this, &ASaoirse::RewindTime);
 	}
-	
 }
 
 void ASaoirse::MoveForward(const FInputActionInstance& Inst)

@@ -8,6 +8,8 @@
 #include "InputMappingContext.h"
 #include "InputActionValue.h"
 #include "TimeTravel.h"
+#include "Perception/AISense_Sight.h"
+#include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Saoirse.generated.h"
@@ -25,7 +27,8 @@ public:
 	
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UTimeTravel* TimeTravelComponent;
-
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
+	UAIPerceptionStimuliSourceComponent* StimuliSource;
 private:
 	USpringArmComponent* SpringCam;
 	UCameraComponent* Camera;
