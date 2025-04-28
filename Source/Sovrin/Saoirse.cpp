@@ -13,12 +13,14 @@ ASaoirse::ASaoirse()
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputForwardObject(TEXT("/Game/SovrinClasses/InputMapping/IA_MoveForward.IA_MoveForward"));
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputRightObject(TEXT("/Game/SovrinClasses/InputMapping/IA_MoveRight.IA_MoveRight"));
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputRewindObject(TEXT("/Game/SovrinClasses/InputMapping/IA_Rewind.IA_Rewind"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> UInputCrouchObject(TEXT("/Game/SovrinClasses/InputMapping/IA_Crouch.IA_Crouch"));
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> USkeletalMeshObject(TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny.SKM_Manny"));
 
 	InputMapping = InputMappingContextObject.Object;
 	InputForwardAction = UInputForwardObject.Object;
 	InputRightAction = UInputRightObject.Object;
 	InputRewind = UInputRewindObject.Object;
+	InputCrouch = UInputCrouchObject.Object;
 	this->GetMesh()->SetSkeletalMeshAsset(USkeletalMeshObject.Object);
 	this->GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
 	this->GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
@@ -74,6 +76,7 @@ void ASaoirse::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		Input->BindAction(InputRightAction,ETriggerEvent::Triggered, this, &ASaoirse::MoveRight);
 		Input->BindAction(InputRewind,ETriggerEvent::Started, this, &ASaoirse::RewindTime);
 		Input->BindAction(InputRewind,ETriggerEvent::Completed, this, &ASaoirse::RewindTime);
+		Input->BindAction(InputCrouch,ETriggerEvent::Started, this, &ASaoirse::CrouchProne);
 	}
 }
 
@@ -84,6 +87,22 @@ void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 void ASaoirse::MoveRight(const FInputActionInstance& Inst)
 {
 	this->GetMovementComponent()->AddInputVector(Inst.GetValue().Get<float>()*FVector::RightVector);
+}
+
+void ASaoirse::CrouchProne(const FInputActionInstance& Inst)
+{
+	if (Inst.GetTriggerEvent()==ETriggerEvent::Started)
+	{
+		if (this->GetCharacterMovement()->IsCrouching())
+		{
+			this->GetCharacterMovement()->UnCrouch(true);
+		}
+		else
+		{
+			this->GetCharacterMovement()->Crouch(true);
+		}
+		
+	}
 }
 
 void ASaoirse::RewindTime(const FInputActionInstance& Inst)

@@ -34,6 +34,7 @@ private:
 	UCameraComponent* Camera;
 	void MoveForward(const FInputActionInstance& Inst);
 	void MoveRight(const FInputActionInstance& Inst);
+	void CrouchProne(const FInputActionInstance& Inst);
 	void RewindTime(const FInputActionInstance& Inst);
 	
 protected:
@@ -50,4 +51,7 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
 	class UInputAction* InputRewind;
+	
+	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+	class UInputAction* InputCrouch;
 };
