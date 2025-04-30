@@ -5,6 +5,7 @@
 #include "TimeTravel.h"
 #include "ToolBuilderUtil.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetStringLibrary.h"
 
 
 ASaoirse::ASaoirse()
@@ -83,6 +84,8 @@ void ASaoirse::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 {
 	this->GetMovementComponent()->AddInputVector(FVector::ForwardVector*Inst.GetValue().Get<float>());
+	FRotator Rotation = FRotator(Inst.GetValue().Get<float>()*100.0f,0.0f,0.0f);
+	FaceRotation(Rotation);
 }
 void ASaoirse::MoveRight(const FInputActionInstance& Inst)
 {
@@ -93,21 +96,26 @@ void ASaoirse::CrouchProne(const FInputActionInstance& Inst)
 {
 	if (Inst.GetTriggerEvent()==ETriggerEvent::Started)
 	{
-		if (this->GetCharacterMovement()->IsCrouching())
+		if (this->GetCharacterMovement()->bWantsToCrouch == true)
 		{
+			//this->GetCharacterMovement()->UnCrouch(true);
+			this->GetCharacterMovement()->bWantsToCrouch = false;
+			UE_LOG(LogTemp, Display, TEXT("Crouching %s"), this->GetCharacterMovement()->bWantsToCrouch ? TEXT("true") : TEXT("false"));
 			this->GetCharacterMovement()->UnCrouch(true);
 		}
 		else
 		{
+			//this->GetCharacterMovement()->UnCrouch(true);
+			this->GetCharacterMovement()->bWantsToCrouch = true;
+			UE_LOG(LogTemp, Display, TEXT("Crouching %s"), this->GetCharacterMovement()->bWantsToCrouch ? TEXT("true") : TEXT("false"));
 			this->GetCharacterMovement()->Crouch(true);
 		}
-		
 	}
 }
 
 void ASaoirse::RewindTime(const FInputActionInstance& Inst)
 {
-	if (Inst.GetTriggerEvent()==ETriggerEvent::Started)
+	if (Inst.GetTriggerEvent()==ETriggerEvent::Triggered)
 	{
 		
 		if (TimeTravelComponent!=nullptr)
