@@ -28,14 +28,14 @@ void ABaseNMEai::OnTargetSighted(const TArray<AActor*>& Targets)
 		if (Target->IsA(ASaoirse::StaticClass()))
 		{
 			MoveToLocation(Target->GetActorLocation());
-			UE_LOG(LogTemp, Display, TEXT("Target sighted"));
+			//UE_LOG(LogTemp, Display, TEXT("Target sighted"));
 		}
 	}
 }
 
 void ABaseNMEai::OnPawnSighted(APawn* SpottedPawn)
 {
-	UE_LOG(LogTemp, Display, TEXT("Target sighted"));
+	//UE_LOG(LogTemp, Display, TEXT("Target sighted"));
 	MoveToLocation(SpottedPawn->GetActorLocation());
 }
 
