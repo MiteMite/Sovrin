@@ -17,7 +17,9 @@ ASaoirse::ASaoirse()
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputCrouchObject(TEXT("/Game/SovrinClasses/InputMapping/IA_Crouch.IA_Crouch"));
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> USkeletalMeshObject(TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny.SKM_Manny"));
 	static ConstructorHelpers::FObjectFinder<UAnimBlueprint> UAnimationClass(TEXT("/Game/Characters/Mannequins/Animations/ABP_Manny.ABP_Manny"));
-	
+
+	this->GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
+
 	InputMapping = InputMappingContextObject.Object;
 	InputForwardAction = UInputForwardObject.Object;
 	InputRightAction = UInputRightObject.Object;
@@ -25,7 +27,8 @@ ASaoirse::ASaoirse()
 	InputCrouch = UInputCrouchObject.Object;
 	this->GetMesh()->SetSkeletalMeshAsset(USkeletalMeshObject.Object);
 	this->GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
-	//this->GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+	this->GetCharacterMovement()->GravityScale = 20.0f;
+	this->GetCharacterMovement()->MaxWalkSpeedCrouched = 100.0f;
 	TimeTravelComponent = CreateDefaultSubobject<UTimeTravel>(TEXT("TimeTravel"));
 
 	// Create the CameraBoom (SpringArmComponent)
@@ -69,15 +72,13 @@ void ASaoirse::Tick(float DeltaSeconds)
 	if (!this->GetVelocity().IsNearlyZero())
 	{
 		FRotator Rotation = this->GetVelocity().Rotation()+FRotator(0.0f,90.0f,0.0f);
-		this->GetMesh()->SetRelativeRotation(Rotation);
+		this->GetMesh()->SetRelativeRotation(FRotator(0.0f,Rotation.Yaw,Rotation.Roll));
 	}
 }
 
 void ASaoirse::BeginPlay()
 {
 	Super::BeginPlay();
-	FRotator Rotation = this->GetVelocity().Rotation()+FRotator(0.0f,90.0f,0.0f);
-	this->GetMesh()->SetRelativeRotation(Rotation);
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
@@ -114,18 +115,18 @@ void ASaoirse::CrouchProne(const FInputActionInstance& Inst)
 {
 	if (Inst.GetTriggerEvent()==ETriggerEvent::Started)
 	{
-		if (this->GetCharacterMovement()->bWantsToCrouch == true)
+		if (this->GetCharacterMovement()->IsCrouching())
 		{
 			//this->GetCharacterMovement()->UnCrouch(true);
-			this->GetCharacterMovement()->bWantsToCrouch = false;
-			UE_LOG(LogTemp, Display, TEXT("Crouching %s"), this->GetCharacterMovement()->bWantsToCrouch ? TEXT("true") : TEXT("false"));
+			//this->GetCharacterMovement()->bWantsToCrouch = false;
+			UE_LOG(LogTemp, Display, TEXT("Crouching %s"), this->GetCharacterMovement()->IsCrouching() ? TEXT("true") : TEXT("false"));
 			this->GetCharacterMovement()->UnCrouch(true);
 		}
 		else
 		{
 			//this->GetCharacterMovement()->UnCrouch(true);
-			this->GetCharacterMovement()->bWantsToCrouch = true;
-			UE_LOG(LogTemp, Display, TEXT("Crouching %s"), this->GetCharacterMovement()->bWantsToCrouch ? TEXT("true") : TEXT("false"));
+			//this->GetCharacterMovement()->bWantsToCrouch = true;
+			UE_LOG(LogTemp, Display, TEXT("Crouching %s"), this->GetCharacterMovement()->IsCrouching() ? TEXT("true") : TEXT("false"));
 			this->GetCharacterMovement()->Crouch(true);
 		}
 	}
@@ -150,8 +151,6 @@ void ASaoirse::RewindTime(const FInputActionInstance& Inst)
 			TimeTravelComponent->OnTimeTravelEnded.Broadcast();
 		}
 	}
-
-	//UE_LOG(LogTemp, Display, TEXT("My Current Transform is %s"),*GetTransform().ToString());
 }
 
 ASaoirse::~ASaoirse()
