@@ -24,7 +24,7 @@ ASaoirse::ASaoirse()
 	InputCrouch = UInputCrouchObject.Object;
 	this->GetMesh()->SetSkeletalMeshAsset(USkeletalMeshObject.Object);
 	this->GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
-	//this->GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+	this->GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 	TimeTravelComponent = CreateDefaultSubobject<UTimeTravel>(TEXT("TimeTravel"));
 
 	// Create the CameraBoom (SpringArmComponent)
@@ -57,8 +57,8 @@ void ASaoirse::Tick(float DeltaSeconds)
 	//adjust rotation
 	if (!this->GetVelocity().IsNearlyZero())
 	{
-		FRotator Rotation = this->GetVelocity().Rotation();
-		this->GetMesh()->SetWorldRotation(Rotation);
+		FRotator Rotation = this->GetVelocity().Rotation()+FRotator(0.0f,90.0f,0.0f);
+		this->GetMesh()->SetRelativeRotation(Rotation);
 	}
 }
 
