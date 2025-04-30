@@ -12,6 +12,9 @@
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "animation/AnimInstance.h"
+#include "animation/AnimBlueprint.h"
+#include "animation/AnimBlueprintGeneratedClass.h"
 #include "Saoirse.generated.h"
 
 UCLASS()

@@ -16,7 +16,8 @@ ASaoirse::ASaoirse()
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputRewindObject(TEXT("/Game/SovrinClasses/InputMapping/IA_Rewind.IA_Rewind"));
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputCrouchObject(TEXT("/Game/SovrinClasses/InputMapping/IA_Crouch.IA_Crouch"));
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> USkeletalMeshObject(TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny.SKM_Manny"));
-
+	static ConstructorHelpers::FObjectFinder<UAnimBlueprint> UAnimationClass(TEXT("/Game/Characters/Mannequins/Animations/ABP_Manny.ABP_Manny"));
+	
 	InputMapping = InputMappingContextObject.Object;
 	InputForwardAction = UInputForwardObject.Object;
 	InputRightAction = UInputRightObject.Object;
@@ -48,12 +49,22 @@ ASaoirse::ASaoirse()
 
 	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSource"));
 	StimuliSource->RegisterForSense(UAISense_Sight::StaticClass());
+
+	//bind animation blueprint
+	if (UAnimationClass.Object!=nullptr)
+	{
+		this->GetMesh()->SetAnimInstanceClass(UAnimationClass.Object->GeneratedClass);
+	}else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Aint no animation blueprint"));
+	}
+	
+
 }
 
 void ASaoirse::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-
 	//adjust rotation
 	if (!this->GetVelocity().IsNearlyZero())
 	{
