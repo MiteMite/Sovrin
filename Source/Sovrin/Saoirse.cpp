@@ -25,7 +25,7 @@ ASaoirse::ASaoirse()
 	InputCrouch = UInputCrouchObject.Object;
 	this->GetMesh()->SetSkeletalMeshAsset(USkeletalMeshObject.Object);
 	this->GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
-	this->GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
+	//this->GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 	TimeTravelComponent = CreateDefaultSubobject<UTimeTravel>(TEXT("TimeTravel"));
 
 	// Create the CameraBoom (SpringArmComponent)
@@ -76,6 +76,8 @@ void ASaoirse::Tick(float DeltaSeconds)
 void ASaoirse::BeginPlay()
 {
 	Super::BeginPlay();
+	FRotator Rotation = this->GetVelocity().Rotation()+FRotator(0.0f,90.0f,0.0f);
+	this->GetMesh()->SetRelativeRotation(Rotation);
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
@@ -131,7 +133,7 @@ void ASaoirse::CrouchProne(const FInputActionInstance& Inst)
 
 void ASaoirse::RewindTime(const FInputActionInstance& Inst)
 {
-	if (Inst.GetTriggerEvent()==ETriggerEvent::Triggered)
+	if (Inst.GetTriggerEvent()==ETriggerEvent::Started)
 	{
 		
 		if (TimeTravelComponent!=nullptr)
