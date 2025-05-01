@@ -28,7 +28,7 @@ ASaoirse::ASaoirse()
 	this->GetMesh()->SetSkeletalMeshAsset(USkeletalMeshObject.Object);
 	this->GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
 	this->GetCharacterMovement()->GravityScale = 20.0f;
-	this->GetCharacterMovement()->MaxWalkSpeedCrouched = 100.0f;
+	this->GetCharacterMovement()->MaxWalkSpeedCrouched = 150.0f;
 	TimeTravelComponent = CreateDefaultSubobject<UTimeTravel>(TEXT("TimeTravel"));
 
 	// Create the CameraBoom (SpringArmComponent)
@@ -69,7 +69,7 @@ void ASaoirse::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	//adjust rotation
-	if (!this->GetVelocity().IsNearlyZero())
+	if (!this->GetVelocity().IsNearlyZero() || this->GetCharacterMovement()->IsFalling())
 	{
 		FRotator Rotation = this->GetVelocity().Rotation()+FRotator(0.0f,90.0f,0.0f);
 		this->GetMesh()->SetRelativeRotation(FRotator(0.0f,Rotation.Yaw,Rotation.Roll));
@@ -115,19 +115,15 @@ void ASaoirse::CrouchProne(const FInputActionInstance& Inst)
 {
 	if (Inst.GetTriggerEvent()==ETriggerEvent::Started)
 	{
-		if (this->GetCharacterMovement()->IsCrouching())
+		if (this->GetCharacterMovement()->bWantsToCrouch == false)
 		{
-			//this->GetCharacterMovement()->UnCrouch(true);
-			//this->GetCharacterMovement()->bWantsToCrouch = false;
 			UE_LOG(LogTemp, Display, TEXT("Crouching %s"), this->GetCharacterMovement()->IsCrouching() ? TEXT("true") : TEXT("false"));
-			this->GetCharacterMovement()->UnCrouch(true);
+			this->GetCharacterMovement()->bWantsToCrouch = true;
 		}
 		else
 		{
-			//this->GetCharacterMovement()->UnCrouch(true);
-			//this->GetCharacterMovement()->bWantsToCrouch = true;
 			UE_LOG(LogTemp, Display, TEXT("Crouching %s"), this->GetCharacterMovement()->IsCrouching() ? TEXT("true") : TEXT("false"));
-			this->GetCharacterMovement()->Crouch(true);
+			this->GetCharacterMovement()->bWantsToCrouch = false;
 		}
 	}
 }
