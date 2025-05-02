@@ -73,13 +73,13 @@ void UTimeTravel::RecordSnapshot(float DeltaTime)
 
 void UTimeTravel::PlaySnapshots(float DeltaTime, bool bRewinding)
 {
-	PlaybackSpeed+=DeltaTime;
 	if (!TransformAndVelocitySnapshots.IsEmpty())
 	{
 		//UE_LOG(LogTemp, Display, TEXT("Rewinding is %f"),PlaybackSpeed);
 		if (bRewinding)
 		{
 			{
+				PlaybackSpeed+=DeltaTime;
 				UE_LOG(LogTemp, Display, TEXT("Rewinding to %f"),PlaybackSpeed);
 				if (PlaybackSpeed>0.003f)
 				{
@@ -88,9 +88,6 @@ void UTimeTravel::PlaySnapshots(float DeltaTime, bool bRewinding)
 					PlaybackSpeed=0.0f;
 				}
 			}
-		}else
-		{
-			PlaybackSpeed=0.0f; //stops playback speed from increasing over time
 		}
 	}
 }
