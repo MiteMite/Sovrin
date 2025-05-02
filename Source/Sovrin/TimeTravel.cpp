@@ -1,12 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "TimeTravel.h"
-
-#include "AssetTypeCategories.h"
 #include "ComponentUtils.h"
-#include "MaterialHLSLTree.h"
-#include "Saoirse.h"
+#include "Sovrin/Saoirse.h"
 #include "Engine/World.h"
 #include "TimeTravelGlobal.h"
 #include "Kismet/GameplayStatics.h"
@@ -93,6 +88,9 @@ void UTimeTravel::PlaySnapshots(float DeltaTime, bool bRewinding)
 					PlaybackSpeed=0.0f;
 				}
 			}
+		}else
+		{
+			PlaybackSpeed=0.0f; //stops playback speed from increasing over time
 		}
 	}
 }

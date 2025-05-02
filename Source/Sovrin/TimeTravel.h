@@ -5,6 +5,7 @@
 #include "Containers/RingBuffer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Windows/AllowWindowsPlatformTypes.h"
+#include "delegates/Delegate.h"
 #include "TimeTravel.generated.h"
 
 /**
@@ -12,6 +13,7 @@
  * game object at the moment a snapshot is
  * taken and the state of the timeline.
  */
+
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTimeTravelStarted);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTimeTravelEnded);
 
@@ -48,12 +50,14 @@ public:
 	void PlaySnapshots(float DeltaTime, bool bRewinding); //Play recorded snapshots at a certain rate of time
 	void PauseTime(float DeltaTime, bool bRewinding); //Pause all movement in the game
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+	
 	FOnTimeTravelStarted OnTimeTravelStarted;
-	UFUNCTION()
-	void FOnTimeTravelStarted(); //begin state
 	FOnTimeTravelEnded OnTimeTravelEnded;
 	UFUNCTION()
+	void FOnTimeTravelStarted(); //begin state
+	UFUNCTION()
 	void FOnTimeTravelEnded();	//end state
+	
 private:
 	
 	UPrimitiveComponent* OwnerRootComponent;

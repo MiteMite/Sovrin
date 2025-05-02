@@ -2,8 +2,7 @@
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
-#include "TimeTravel.h"
-#include "ToolBuilderUtil.h"
+#include "Sovrin/TimeTravel.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetStringLibrary.h"
 
