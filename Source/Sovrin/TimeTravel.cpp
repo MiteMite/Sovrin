@@ -24,22 +24,19 @@ void UTimeTravel::TickComponent(float DeltaTime, enum ELevelTick TickType, FActo
 void UTimeTravel::BeginPlay()
 {
 	Super::BeginPlay();
-	TArray<AActor*> ActorsInWorld;
-	UWorld* World = GetWorld();
-	UGameplayStatics::GetAllActorsOfClass(World,AActor::StaticClass(),ActorsInWorld);
-	for (AActor* Actor : ActorsInWorld)
+
+}
+
+void UTimeTravel::SetupDelegates(AActor* TimeTravelActor)
+{
+	if (TimeTravelActor->GetComponentByClass(UTimeTravel::StaticClass())!=nullptr)
 	{
-		if (Actor->GetComponentByClass(UTimeTravel::StaticClass())!=nullptr)
-		{
-			Actor->FindComponentByClass<UTimeTravel>()->OnTimeTravelStarted.AddDynamic(this,&UTimeTravel::FOnTimeTravelStarted);
-			Actor->FindComponentByClass<UTimeTravel>()->OnTimeTravelEnded.AddDynamic(this,&UTimeTravel::FOnTimeTravelEnded);
-			//UE_LOG(LogTemp, Display, TEXT("Actor is %s"),*Actor->GetName());
-		}
+		TimeTravelActor->FindComponentByClass<UTimeTravel>()->OnTimeTravelStarted.AddDynamic(this,&UTimeTravel::FOnTimeTravelStarted);
+		TimeTravelActor->FindComponentByClass<UTimeTravel>()->OnTimeTravelEnded.AddDynamic(this,&UTimeTravel::FOnTimeTravelEnded);
 	}
 	OnTimeTravelStarted.AddDynamic(this,&UTimeTravel::FOnTimeTravelStarted);
 	OnTimeTravelEnded.AddDynamic(this,&UTimeTravel::FOnTimeTravelEnded);
 }
-
 
 void UTimeTravel::RecordSnapshot(float DeltaTime)
 {

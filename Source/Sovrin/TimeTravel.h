@@ -50,6 +50,9 @@ public:
 	void PlaySnapshots(float DeltaTime, bool bRewinding); //Play recorded snapshots at a certain rate of time
 	void PauseTime(float DeltaTime, bool bRewinding); //Pause all movement in the game
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
+
+	UFUNCTION()
+	void SetupDelegates(AActor* TimeTravelActor);
 	
 	FOnTimeTravelStarted OnTimeTravelStarted;
 	FOnTimeTravelEnded OnTimeTravelEnded;
