@@ -8,13 +8,13 @@ ABaseNMEai::ABaseNMEai()
 	NMEPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("PerceptionComponent"));
 	SetPerceptionComponent(*NMEPerceptionComponent);
 	SightSenseConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightSenseConfig"));
-	SightSenseConfig->SightRadius = 400.0f;
-	SightSenseConfig->LoseSightRadius = 700.0f;
-	SightSenseConfig->PeripheralVisionAngleDegrees = 60.0f;
+	SightSenseConfig->SightRadius = 600.0f;
+	SightSenseConfig->LoseSightRadius = 100.0f;
+	SightSenseConfig->PeripheralVisionAngleDegrees = 70.0f;
 	SightSenseConfig->DetectionByAffiliation.bDetectEnemies = true;
 	SightSenseConfig->DetectionByAffiliation.bDetectFriendlies = true;
 	SightSenseConfig->DetectionByAffiliation.bDetectNeutrals = true;
-	SightSenseConfig->SetMaxAge(60.0f);
+	SightSenseConfig->SetMaxAge(100.0f);
 	NMEPerceptionComponent->ConfigureSense(*SightSenseConfig);
 	NMEPerceptionComponent->SetDominantSense(SightSenseConfig->GetSenseImplementation());
 	NMEPerceptionComponent->OnPerceptionUpdated.AddDynamic(this, &ABaseNMEai::OnTargetSighted);
