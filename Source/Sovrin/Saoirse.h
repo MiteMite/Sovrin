@@ -8,6 +8,7 @@
 #include "InputMappingContext.h"
 #include "InputActionValue.h"
 #include "TimeTravel.h"
+#include "TimeTravelGlobal.h"
 #include "Perception/AISense_Sight.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Camera/CameraComponent.h"
@@ -27,7 +28,8 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
-	
+
+	ATimeTravelGlobal* TimeTravelGameMode;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UTimeTravel* TimeTravelComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")

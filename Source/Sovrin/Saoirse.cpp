@@ -2,6 +2,8 @@
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "TimeTravelGlobal.h"
+#include "GameFramework/GameModeBase.h"
 #include "Sovrin/TimeTravel.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetStringLibrary.h"
@@ -29,7 +31,6 @@ ASaoirse::ASaoirse()
 	this->GetCharacterMovement()->GravityScale = 20.0f;
 	this->GetCharacterMovement()->MaxWalkSpeedCrouched = 150.0f;
 	TimeTravelComponent = CreateDefaultSubobject<UTimeTravel>(TEXT("TimeTravel"));
-
 	// Create the CameraBoom (SpringArmComponent)
 	SpringCam = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	SpringCam->SetupAttachment(this->GetRootComponent());
@@ -60,8 +61,6 @@ ASaoirse::ASaoirse()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Aint no animation blueprint"));
 	}
-	
-
 }
 
 void ASaoirse::Tick(float DeltaSeconds)
@@ -78,6 +77,8 @@ void ASaoirse::Tick(float DeltaSeconds)
 void ASaoirse::BeginPlay()
 {
 	Super::BeginPlay();
+	UWorld* World = GetWorld();
+	TimeTravelGameMode = Cast<ATimeTravelGlobal>(UGameplayStatics::GetGameMode(World));
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
@@ -131,21 +132,25 @@ void ASaoirse::RewindTime(const FInputActionInstance& Inst)
 {
 	if (Inst.GetTriggerEvent()==ETriggerEvent::Started)
 	{
-		
-		if (TimeTravelComponent!=nullptr)
+		if (TimeTravelGameMode!=nullptr)
 		{
-			UE_LOG(LogTemp, Display, TEXT("Started Rewinding time"));
-			TimeTravelComponent->OnTimeTravelStarted.Broadcast();
+			for (UTimeTravel* component : TimeTravelGameMode->TimeTravelActorsInWorld)
+			{
+				component->CallOnTimeTravelStarted();
+			}
 		}
 	}
 	if (Inst.GetTriggerEvent()==ETriggerEvent::Completed)
 	{
-		if (TimeTravelComponent!=nullptr)
+		if (TimeTravelGameMode!=nullptr)
 		{
-			UE_LOG(LogTemp, Display, TEXT("Stopped Rewinding time"));
-			TimeTravelComponent->OnTimeTravelEnded.Broadcast();
+			for (UTimeTravel* component : TimeTravelGameMode->TimeTravelActorsInWorld)
+			{
+				component->CallOnTimeTravelEnded();
+			}
 		}
 	}
+
 }
 
 ASaoirse::~ASaoirse()

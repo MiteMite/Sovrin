@@ -10,7 +10,6 @@
 UTimeTravel::UTimeTravel()
 {
 	PrimaryComponentTick.bCanEverTick=true;
-	
 }
 
 void UTimeTravel::TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
@@ -24,20 +23,19 @@ void UTimeTravel::TickComponent(float DeltaTime, enum ELevelTick TickType, FActo
 void UTimeTravel::BeginPlay()
 {
 	Super::BeginPlay();
-
-}
-
-void UTimeTravel::SetupDelegates(AActor* TimeTravelActor)
-{
-	if (TimeTravelActor->GetComponentByClass(UTimeTravel::StaticClass())!=nullptr)
-	{
-		TimeTravelActor->FindComponentByClass<UTimeTravel>()->OnTimeTravelStarted.AddDynamic(this,&UTimeTravel::FOnTimeTravelStarted);
-		TimeTravelActor->FindComponentByClass<UTimeTravel>()->OnTimeTravelEnded.AddDynamic(this,&UTimeTravel::FOnTimeTravelEnded);
-	}
+	//setup delegate bindings
 	OnTimeTravelStarted.AddDynamic(this,&UTimeTravel::FOnTimeTravelStarted);
 	OnTimeTravelEnded.AddDynamic(this,&UTimeTravel::FOnTimeTravelEnded);
 }
 
+void UTimeTravel::CallOnTimeTravelStarted()
+{
+	OnTimeTravelStarted.Broadcast();
+}
+void UTimeTravel::CallOnTimeTravelEnded()
+{
+	OnTimeTravelEnded.Broadcast();
+}
 void UTimeTravel::RecordSnapshot(float DeltaTime)
 {
 	if (!IsRewinding)
@@ -50,20 +48,16 @@ void UTimeTravel::RecordSnapshot(float DeltaTime)
 				if (TransformAndVelocitySnapshots.Num()>=3000)//ensure that the ring buffer does not go over a certain size
 				{
 					TransformAndVelocitySnapshots.RemoveAt(0);
-					//UE_LOG(LogTemp, Display, TEXT("Removing oldest snapshot"));
 				}
 				else
 				{
 					TransformAndVelocitySnapshots.Add(FTransformAndVelocitySnapshot(DeltaTime,GetOwner()->GetTransform(),GetOwner()->GetVelocity()));
-					//UE_LOG(LogTemp, Display, TEXT("Adding new snapshot after %f"),TransformAndVelocitySnapshots.Last().TimeSinceLastSnapshot);
-					//TransformAndVelocitySnapshots.First().TimeSinceLastSnapshot=0.0f;
 				}
 			}
 		}
 		else
 		{
 			TransformAndVelocitySnapshots.Add(FTransformAndVelocitySnapshot(DeltaTime,GetOwner()->GetTransform(),GetOwner()->GetVelocity()));
-			//UE_LOG(LogTemp, Display, TEXT("Adding new snapshot if buffer is empty"));
 		}
 	}
 }
@@ -72,7 +66,6 @@ void UTimeTravel::PlaySnapshots(float DeltaTime, bool bRewinding)
 {
 	if (!TransformAndVelocitySnapshots.IsEmpty())
 	{
-		//UE_LOG(LogTemp, Display, TEXT("Rewinding is %f"),PlaybackSpeed);
 		if (bRewinding)
 		{
 			{
@@ -91,6 +84,8 @@ void UTimeTravel::PlaySnapshots(float DeltaTime, bool bRewinding)
 
 void UTimeTravel::FOnTimeTravelStarted()
 {
+	UE_LOG(LogTemp, Display, TEXT("Started Rewinding time"));
+
 	IsRewinding = true;
 	IsFastForwarding = false;
 	IsTimeScrubbing = false;
@@ -98,6 +93,8 @@ void UTimeTravel::FOnTimeTravelStarted()
 
 void UTimeTravel::FOnTimeTravelEnded()
 {
+	UE_LOG(LogTemp, Display, TEXT("Stopped Rewinding time"));
+
 	IsRewinding = false;
 }
 

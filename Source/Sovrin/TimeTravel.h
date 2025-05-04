@@ -3,7 +3,6 @@
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
 #include "Containers/RingBuffer.h"
-#include "GameFramework/CharacterMovementComponent.h"
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include "delegates/Delegate.h"
 #include "TimeTravel.generated.h"
@@ -50,9 +49,9 @@ public:
 	void PlaySnapshots(float DeltaTime, bool bRewinding); //Play recorded snapshots at a certain rate of time
 	void PauseTime(float DeltaTime, bool bRewinding); //Pause all movement in the game
 	virtual void TickComponent(float DeltaTime, enum ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction) override;
-
-	UFUNCTION()
-	void SetupDelegates(AActor* TimeTravelActor);
+	
+	void CallOnTimeTravelStarted();
+	void CallOnTimeTravelEnded();
 	
 	FOnTimeTravelStarted OnTimeTravelStarted;
 	FOnTimeTravelEnded OnTimeTravelEnded;
@@ -62,10 +61,6 @@ public:
 	void FOnTimeTravelEnded();	//end state
 	
 private:
-	
-	UPrimitiveComponent* OwnerRootComponent;
-	UCharacterMovementComponent* OwnerMovementComponent; 
-	USkeletalMeshComponent* OwnerSkeletalMeshComponent;
 	TRingBuffer<FTransformAndVelocitySnapshot> TransformAndVelocitySnapshots;
 	TRingBuffer<FMovementVelocityAndModeSnapshot> MovementVelocityAndModeSnapshots;
 protected:

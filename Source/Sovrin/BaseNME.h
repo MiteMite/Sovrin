@@ -1,6 +1,7 @@
 ﻿#pragma once
 #include "GameFramework/Character.h"
 #include "TimeTravel.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "animation/AnimInstance.h"
 #include "animation/AnimBlueprint.h"
 #include "animation/AnimBlueprintGeneratedClass.h"
