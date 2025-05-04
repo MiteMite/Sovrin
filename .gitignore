@@ -7,19 +7,17 @@
 /DerivedDataCache
 /Intermediate
 /Saved
-
+/Config
+/Content
 #################################
 # UE5 starter content #
 #################################
-
-Content/StarterContent
-Config
 
 #################################
 # Visual Studio Generated Files #
 #################################
 # Cache Directory
-.vs
+*.vs
 # User Specific Files
 *.rsuser
 *.suo
@@ -34,8 +32,8 @@ Config
 # Solution Files
 *.sln
 # VSCode Cache Directory
-.vscode
-.vsconfig
+*.vscode
+*.vsconfig
 # VSCode History Files
 **/.history
 
@@ -43,13 +41,10 @@ Config
 # JetBrains Rider Generated Files #
 ###################################
 # Cache Directory
-.idea
-
+*.idea
 # Solution and Project Files
 *.uproject
 *.sln
 *.csproj
 *.sln.DotSettings
 *.sln.DotSettings.user
-Content/
-Config/
