@@ -34,6 +34,12 @@ void ABaseNMEai::OnTargetSighted(const TArray<AActor*>& Targets)
 	}
 }
 
+AActor* ABaseNMEai::GetNextPatrolPoint()
+{
+	return nullptr;
+}
+
+
 ABaseNMEai::~ABaseNMEai()
 {
 	
