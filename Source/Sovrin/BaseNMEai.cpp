@@ -36,9 +36,18 @@ void ABaseNMEai::OnTargetSighted(const TArray<AActor*>& Targets)
 
 AActor* ABaseNMEai::GetNextPatrolPoint()
 {
-	return nullptr;
+	if (PatrolPoints.Num()>0)
+	{
+		return nullptr;
+	}
+	CurrentPatrolPointIndexINT32 = (CurrentPatrolPointIndexINT32+1)%PatrolPoints.Num();
+	return PatrolPoints[CurrentPatrolPointIndexINT32];
 }
 
+AActor* ABaseNMEai::GetCurrentPatrolPoints()
+{
+	return PatrolPoints[CurrentPatrolPointIndexINT32];
+}
 
 ABaseNMEai::~ABaseNMEai()
 {

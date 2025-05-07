@@ -20,7 +20,7 @@ public:
 	AActor* GetNextPatrolPoint();
 	
 	UFUNCTION(BlueprintCallable, Category="AI|Patrol")
-	AActor* GetCurrentPatrolPoints(){ return nullptr;}
+	AActor* GetCurrentPatrolPoints();
 
 private:
 	UPROPERTY(EditAnywhere, Category = "Perception")
