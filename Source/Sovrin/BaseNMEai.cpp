@@ -1,5 +1,4 @@
 ﻿#include "BaseNMEai.h"
-
 #include "Sovrin/BaseNME.h"
 #include "Sovrin/Saoirse.h"
 
@@ -18,8 +17,25 @@ ABaseNMEai::ABaseNMEai()
 	NMEPerceptionComponent->ConfigureSense(*SightSenseConfig);
 	NMEPerceptionComponent->SetDominantSense(SightSenseConfig->GetSenseImplementation());
 	NMEPerceptionComponent->OnPerceptionUpdated.AddDynamic(this, &ABaseNMEai::OnTargetSighted);
+	BehaviorTree = CreateDefaultSubobject<UBehaviorTree>(TEXT("BehaviorTree"));
+	BlackboardComponent = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackboardComponent"));
+	BlackboardData = CreateDefaultSubobject<UBlackboardData>(TEXT("BlackboardData"));
+	BehaviorTreeComponent = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BehaviorTreeComponent"));
+	ConstructorHelpers::FObjectFinder<UBehaviorTree> BehaviorTreeObject(TEXT("/Game/SovrinClasses/AiAssets/BT_BaseNME.BT_BaseNME"));
+	ConstructorHelpers::FObjectFinder<UBlackboardData> BlackboardDataObject(TEXT("/Game/SovrinClasses/AiAssets/BB_BaseNME.BB_BaseNME"));
+	BehaviorTree = BehaviorTreeObject.Object;
+	BlackboardData = BlackboardDataObject.Object;
 }
 
+void ABaseNMEai::BeginPlay()
+{
+	Super::BeginPlay();
+	if (BehaviorTree && BlackboardData)
+	{
+		UseBlackboard(BlackboardData,BlackboardComponent);
+		RunBehaviorTree(BehaviorTree);
+	}
+}
 void ABaseNMEai::OnTargetSighted(const TArray<AActor*>& Targets)
 {
 	UE_LOG(LogTemp, Display, TEXT("Handle Ai"));

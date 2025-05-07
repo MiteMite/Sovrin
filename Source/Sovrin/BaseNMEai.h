@@ -2,6 +2,9 @@
 #include "AIController.h"
 #include "CoreMinimal.h"
 #include "Perception/AIPerceptionComponent.h"
+#include "BehaviorTree/BehaviorTree.h"
+#include "BehaviorTree/BehaviorTreeComponent.h"
+#include "BehaviorTree/Blackboard/BlackboardKeyAllTypes.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "BaseNMEai.generated.h"
@@ -22,6 +25,7 @@ public:
 	UFUNCTION(BlueprintCallable, Category="AI|Patrol")
 	AActor* GetCurrentPatrolPoints();
 
+	virtual void BeginPlay() override;
 private:
 	UPROPERTY(EditAnywhere, Category = "Perception")
 	UAIPerceptionComponent* NMEPerceptionComponent;
@@ -42,6 +46,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	class UBlackboardData* BlackboardData;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
+	class UBlackboardComponent* BlackboardComponent;
 	
 	UPROPERTY(EditAnywhere, Category = "AI")
 	class UBehaviorTreeComponent* BehaviorTreeComponent;
