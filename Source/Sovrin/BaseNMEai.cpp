@@ -25,6 +25,7 @@ ABaseNMEai::ABaseNMEai()
 	ConstructorHelpers::FObjectFinder<UBlackboardData> BlackboardDataObject(TEXT("/Game/SovrinClasses/AiAssets/BB_BaseNME.BB_BaseNME"));
 	BehaviorTree = BehaviorTreeObject.Object;
 	BlackboardData = BlackboardDataObject.Object;
+	
 }
 
 void ABaseNMEai::BeginPlay()

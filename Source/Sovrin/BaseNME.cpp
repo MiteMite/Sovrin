@@ -20,6 +20,8 @@ ABaseNME::ABaseNME()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Aint no animation blueprint"));
 	}
+	AIControllerClass = ABaseNMEai::StaticClass();
+	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 
 void ABaseNME::Tick(float DeltaSeconds)
