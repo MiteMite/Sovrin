@@ -4,6 +4,7 @@
 #include "FindPatrolPointTask.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
+#include "BaseNME.h"
 
 UFindPatrolPointTask::UFindPatrolPointTask()
 {
@@ -18,9 +19,9 @@ EBTNodeResult::Type UFindPatrolPointTask::ExecuteTask(UBehaviorTreeComponent& Ow
 	if (!AIController && !BlackboardComponent)
 		return EBTNodeResult::Failed;
 
-	FVector NewLocation = AIController->GetPawn()->GetActorLocation();
+	FVector NewLocation = OwnerComp.GetBlackboardComponent()->GetValueAsVector(TargetLocationKey.SelectedKeyName);
 
 	BlackboardComponent->SetValueAsVector(TargetLocationKey.SelectedKeyName, NewLocation);
-	UE_LOG(LogTemp, Warning, TEXT("New location is: %s"), *NewLocation.ToString());
+	//UE_LOG(LogTemp, Warning, TEXT("New location is: %s"), *NewLocation.ToString());
 	return EBTNodeResult::Succeeded;
 }

@@ -1,7 +1,5 @@
 ﻿#include "BaseNME.h"
 
-#include "BaseNMEai.h"
-
 ABaseNME::ABaseNME()
 {
 	static ConstructorHelpers::FObjectFinder<UAnimBlueprint> UAnimationClass(TEXT("/Game/Characters/Mannequins/Animations/ABP_Manny.ABP_Manny"));
@@ -9,7 +7,6 @@ ABaseNME::ABaseNME()
 	this->GetMesh()->SetSkeletalMesh(USkeletalMeshObject.Object);
 	this->GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
 	this->GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
-	AIControllerClass = ABaseNMEai::StaticClass();
 	TimeTravelComponent = CreateDefaultSubobject<UTimeTravel>(TEXT("TimeTravel"));
 	this->GetCharacterMovement()->MaxWalkSpeed = 300.0f;
 	//bind animation blueprint
@@ -21,6 +18,7 @@ ABaseNME::ABaseNME()
 		UE_LOG(LogTemp, Warning, TEXT("Aint no animation blueprint"));
 	}
 	AIControllerClass = ABaseNMEai::StaticClass();
+	PatrolPoints = AIControllerClass->GetDefaultObject<ABaseNMEai>()->GetControllerPatrolPoints();
 	AutoPossessAI = EAutoPossessAI::PlacedInWorldOrSpawned;
 }
 

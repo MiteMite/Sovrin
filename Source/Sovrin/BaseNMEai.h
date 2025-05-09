@@ -4,8 +4,13 @@
 #include "Perception/AIPerceptionComponent.h"
 #include "BehaviorTree/BehaviorTree.h"
 #include "BehaviorTree/BehaviorTreeComponent.h"
-#include "BehaviorTree/Blackboard/BlackboardKeyAllTypes.h"
-#include "BehaviorTree/BlackboardComponent.h"
+#include "BehaviorTree/Composites/BTComposite_Selector.h"
+#include "BehaviorTree/Composites/BTComposite_Sequence.h"
+#include "BehaviorTree/Composites/BTComposite_SimpleParallel.h"
+#include "DetectPlayerService.h"
+#include "FindPatrolPointTask.h"
+#include "IsPlayerVisibleDecorator.h"
+#include "AITask_MoveTo.generated.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "BaseNMEai.generated.h"
 
@@ -18,15 +23,25 @@ public:
 	
 	UFUNCTION()
 	void OnTargetSighted(const TArray<AActor*>& Targets);
+
+	UFUNCTION(BlueprintCallable, Category="AI|Patrol")
+	TArray<AActor*> GetControllerPatrolPoints();
 	
 	UFUNCTION(BlueprintCallable, Category="AI|Patrol")
 	AActor* GetNextPatrolPoint();
 	
 	UFUNCTION(BlueprintCallable, Category="AI|Patrol")
-	AActor* GetCurrentPatrolPoints();
+	AActor* GetCurrentPatrolPoint();
 
+	UFUNCTION(BlueprintCallable, Category="AI|Patrol")
+	void SetControllerPatrolPoints(TArray<AActor*> PatrolPoints);
+	
+	
+	
 	virtual void BeginPlay() override;
 private:
+	UPROPERTY(EditAnywhere, Category = "AI")
+	TArray<AActor*> ControllerPatrolPoints;
 	UPROPERTY(EditAnywhere, Category = "Perception")
 	UAIPerceptionComponent* NMEPerceptionComponent;
 	UPROPERTY(EditAnywhere, Category = "AI")
@@ -52,9 +67,6 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "AI")
 	class UBehaviorTreeComponent* BehaviorTreeComponent;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	TArray<AActor*> PatrolPoints;
 
 	int32 PatrolPointIndex;
 	

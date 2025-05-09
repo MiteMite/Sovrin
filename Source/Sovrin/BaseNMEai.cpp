@@ -1,9 +1,19 @@
 ﻿#include "BaseNMEai.h"
+
 #include "Sovrin/BaseNME.h"
+#include "BehaviorTree/Tasks/BTTask_MoveTo.h"
+#include "BehaviorTree/Composites/BTComposite_Selector.h"
+#include "BehaviorTree/Blackboard/BlackboardKeyAllTypes.h"
+#include "BehaviorTree/BTCompositeNode.h"
+#include "BehaviorTree/BTDecorator.h"
+#include "BehaviorTree/BTFunctionLibrary.h"
+#include "BehaviorTree/BlackboardAssetProvider.h"
+#include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "Sovrin/Saoirse.h"
 
 ABaseNMEai::ABaseNMEai()
 {
+	// Create perception components
 	NMEPerceptionComponent = CreateDefaultSubobject<UAIPerceptionComponent>(TEXT("PerceptionComponent"));
 	SetPerceptionComponent(*NMEPerceptionComponent);
 	SightSenseConfig = CreateDefaultSubobject<UAISenseConfig_Sight>(TEXT("SightSenseConfig"));
@@ -16,24 +26,99 @@ ABaseNMEai::ABaseNMEai()
 	SightSenseConfig->SetMaxAge(100.0f);
 	NMEPerceptionComponent->ConfigureSense(*SightSenseConfig);
 	NMEPerceptionComponent->SetDominantSense(SightSenseConfig->GetSenseImplementation());
-	NMEPerceptionComponent->OnPerceptionUpdated.AddDynamic(this, &ABaseNMEai::OnTargetSighted);
-	BehaviorTree = CreateDefaultSubobject<UBehaviorTree>(TEXT("BehaviorTree"));
-	BlackboardComponent = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackboardComponent"));
-	BlackboardData = CreateDefaultSubobject<UBlackboardData>(TEXT("BlackboardData"));
+
+	// Create AI components
 	BehaviorTreeComponent = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BehaviorTreeComponent"));
-	ConstructorHelpers::FObjectFinder<UBehaviorTree> BehaviorTreeObject(TEXT("/Game/SovrinClasses/AiAssets/BT_BaseNME.BT_BaseNME"));
-	ConstructorHelpers::FObjectFinder<UBlackboardData> BlackboardDataObject(TEXT("/Game/SovrinClasses/AiAssets/BB_BaseNME.BB_BaseNME"));
-	BehaviorTree = BehaviorTreeObject.Object;
-	BlackboardData = BlackboardDataObject.Object;
-	
+	BlackboardComponent = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackboardComponent"));
+    // Create and setup the Blackboard
+    BlackboardData = NewObject<UBlackboardData>();
+    if (BlackboardData)
+    {
+		/*
+    	// Add Blackboard keys
+        UBlackboardDataFactory* BBFactory = NewObject<UBlackboardDataFactory>();
+        
+        // Add Vector key for target location
+        FBlackboardEntry TargetLocationEntry;
+        TargetLocationEntry.EntryName = FName("TargetLocation");
+        TargetLocationEntry.KeyType = UBlackboardKeyType_Vector::StaticClass();
+        BlackboardData->Keys.Add(TargetLocationEntry);
+        
+        // Add Boolean key for player visibility
+        FBlackboardEntry IsPlayerVisibleEntry;
+        IsPlayerVisibleEntry.EntryName = FName("IsPlayerVisible");
+        IsPlayerVisibleEntry.KeyType = UBlackboardKeyType_Bool::StaticClass();
+        BlackboardData->Keys.Add(IsPlayerVisibleEntry);
+        
+        // Add Object key for current patrol point
+        FBlackboardEntry CurrentPatrolPointEntry;
+        CurrentPatrolPointEntry.EntryName = FName("CurrentPatrolPoint");
+        CurrentPatrolPointEntry.KeyType = UBlackboardKeyType_Object::StaticClass();
+        BlackboardData->Keys.Add(CurrentPatrolPointEntry);*/
+    }
+
+    // Create and setup the Behavior Tree
+    BehaviorTree = NewObject<UBehaviorTree>();
+    if (BehaviorTree)
+    {
+        BehaviorTree->BlackboardAsset = BlackboardData;
+        
+        // Create root Sequence node
+        UBTComposite_Sequence* RootSequence = NewObject<UBTComposite_Sequence>(BehaviorTree);
+        BehaviorTree->RootNode = RootSequence;
+        
+        // Add DetectPlayerService as a service to the root
+        UDetectPlayerService* DetectService = NewObject<UDetectPlayerService>(RootSequence);
+        RootSequence->Services.Add(DetectService);
+        
+    	// Create main Selector node and its child connection
+    	UBTComposite_Selector* MainSelector = NewObject<UBTComposite_Selector>(RootSequence);
+    	FBTCompositeChild MainSelectorChild;
+    	MainSelectorChild.ChildComposite = MainSelector;
+    	RootSequence->Children.Add(MainSelectorChild);
+    	
+        // Create Chase Player sequence
+        UBTComposite_Sequence* ChaseSequence = NewObject<UBTComposite_Sequence>(MainSelector);
+    	FBTCompositeChild ChaseSequenceChild;
+    	ChaseSequenceChild.ChildComposite = ChaseSequence;
+        MainSelector->Children.Add(ChaseSequenceChild);
+        /*
+        // Add IsPlayerVisible decorator to chase sequence
+        UIsPlayerVisibleDecorator* VisibleDecorator = NewObject<UIsPlayerVisibleDecorator>(ChaseSequence);
+        ChaseSequence->Decorators.Add(VisibleDecorator);
+        
+        // Add MoveTo task for chasing player
+        UBTTask_MoveTo* ChaseTask = NewObject<UBTTask_MoveTo>(ChaseSequence);
+        ChaseTask->BlackboardKey.SelectedKeyName = "TargetLocation";
+        ChaseSequence->Children.Add(ChaseTask);
+        
+        // Create Patrol sequence
+        UBTComposite_Sequence* PatrolSequence = NewObject<UBTComposite_Sequence>(MainSelector);
+        MainSelector->Children.Add(PatrolSequence);
+        
+        // Add FindPatrolPoint task
+        UFindPatrolPointTask* FindPatrolTask = NewObject<UFindPatrolPointTask>(PatrolSequence);
+        PatrolSequence->Children.Add(FindPatrolTask);
+        
+        // Add MoveTo task for patrol movement
+        UBTTask_MoveTo* PatrolMoveTask = NewObject<UBTTask_MoveTo>(PatrolSequence);
+        PatrolMoveTask->BlackboardKey.SelectedKeyName = "TargetLocation";
+        PatrolSequence->Children.Add(PatrolMoveTask);*/
+    }
 }
+
 
 void ABaseNMEai::BeginPlay()
 {
 	Super::BeginPlay();
-	if (BehaviorTree && BlackboardData)
+	// Get patrol points from the controlled pawn
+	if (ABaseNME* BaseNME = Cast<ABaseNME>(GetPawn()))
 	{
-		UseBlackboard(BlackboardData,BlackboardComponent);
+		SetControllerPatrolPoints(BaseNME->PatrolPoints);
+	}
+	if (BlackboardData && BehaviorTree)
+	{
+		UseBlackboard(BlackboardData, BlackboardComponent);
 		RunBehaviorTree(BehaviorTree);
 	}
 }
@@ -51,19 +136,33 @@ void ABaseNMEai::OnTargetSighted(const TArray<AActor*>& Targets)
 	}
 }
 
+void ABaseNMEai::SetControllerPatrolPoints(TArray<AActor*> PatrolPoints)
+{
+	ControllerPatrolPoints = PatrolPoints;
+}
+
+TArray<AActor*> ABaseNMEai::GetControllerPatrolPoints()
+{
+	return ControllerPatrolPoints;
+}
+
 AActor* ABaseNMEai::GetNextPatrolPoint()
 {
-	if (PatrolPoints.Num()>0)
+	if (ControllerPatrolPoints.Num()>0)
+	{
+		CurrentPatrolPointIndexINT32++;
+		return ControllerPatrolPoints[CurrentPatrolPointIndexINT32];
+	}
+	else
 	{
 		return nullptr;
 	}
-	CurrentPatrolPointIndexINT32 = (CurrentPatrolPointIndexINT32+1)%PatrolPoints.Num();
-	return PatrolPoints[CurrentPatrolPointIndexINT32];
+
 }
 
-AActor* ABaseNMEai::GetCurrentPatrolPoints()
+AActor* ABaseNMEai::GetCurrentPatrolPoint()
 {
-	return PatrolPoints[CurrentPatrolPointIndexINT32];
+	return ControllerPatrolPoints[CurrentPatrolPointIndexINT32];
 }
 
 ABaseNMEai::~ABaseNMEai()
