@@ -1,14 +1,8 @@
 ﻿#include "BaseNMEai.h"
 
+#include "BaseBehaviorTree.h"
 #include "Sovrin/BaseNME.h"
 #include "BehaviorTree/Tasks/BTTask_MoveTo.h"
-#include "BehaviorTree/Composites/BTComposite_Selector.h"
-#include "BehaviorTree/Blackboard/BlackboardKeyAllTypes.h"
-#include "BehaviorTree/BTCompositeNode.h"
-#include "BehaviorTree/BTDecorator.h"
-#include "BehaviorTree/BTFunctionLibrary.h"
-#include "BehaviorTree/BlackboardAssetProvider.h"
-#include "BehaviorTree/Tasks/BTTask_BlackboardBase.h"
 #include "Sovrin/Saoirse.h"
 
 ABaseNMEai::ABaseNMEai()
@@ -26,85 +20,9 @@ ABaseNMEai::ABaseNMEai()
 	SightSenseConfig->SetMaxAge(100.0f);
 	NMEPerceptionComponent->ConfigureSense(*SightSenseConfig);
 	NMEPerceptionComponent->SetDominantSense(SightSenseConfig->GetSenseImplementation());
-
-	// Create AI components
-	BehaviorTreeComponent = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BehaviorTreeComponent"));
-	BlackboardComponent = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackboardComponent"));
-    // Create and setup the Blackboard
-    BlackboardData = NewObject<UBlackboardData>();
-    if (BlackboardData)
-    {
-		/*
-    	// Add Blackboard keys
-        UBlackboardDataFactory* BBFactory = NewObject<UBlackboardDataFactory>();
-        
-        // Add Vector key for target location
-        FBlackboardEntry TargetLocationEntry;
-        TargetLocationEntry.EntryName = FName("TargetLocation");
-        TargetLocationEntry.KeyType = UBlackboardKeyType_Vector::StaticClass();
-        BlackboardData->Keys.Add(TargetLocationEntry);
-        
-        // Add Boolean key for player visibility
-        FBlackboardEntry IsPlayerVisibleEntry;
-        IsPlayerVisibleEntry.EntryName = FName("IsPlayerVisible");
-        IsPlayerVisibleEntry.KeyType = UBlackboardKeyType_Bool::StaticClass();
-        BlackboardData->Keys.Add(IsPlayerVisibleEntry);
-        
-        // Add Object key for current patrol point
-        FBlackboardEntry CurrentPatrolPointEntry;
-        CurrentPatrolPointEntry.EntryName = FName("CurrentPatrolPoint");
-        CurrentPatrolPointEntry.KeyType = UBlackboardKeyType_Object::StaticClass();
-        BlackboardData->Keys.Add(CurrentPatrolPointEntry);*/
-    }
-
-    // Create and setup the Behavior Tree
-    BehaviorTree = NewObject<UBehaviorTree>();
-    if (BehaviorTree)
-    {
-        BehaviorTree->BlackboardAsset = BlackboardData;
-        
-        // Create root Sequence node
-        UBTComposite_Sequence* RootSequence = NewObject<UBTComposite_Sequence>(BehaviorTree);
-        BehaviorTree->RootNode = RootSequence;
-        
-        // Add DetectPlayerService as a service to the root
-        UDetectPlayerService* DetectService = NewObject<UDetectPlayerService>(RootSequence);
-        RootSequence->Services.Add(DetectService);
-        
-    	// Create main Selector node and its child connection
-    	UBTComposite_Selector* MainSelector = NewObject<UBTComposite_Selector>(RootSequence);
-    	FBTCompositeChild MainSelectorChild;
-    	MainSelectorChild.ChildComposite = MainSelector;
-    	RootSequence->Children.Add(MainSelectorChild);
-    	
-        // Create Chase Player sequence
-        UBTComposite_Sequence* ChaseSequence = NewObject<UBTComposite_Sequence>(MainSelector);
-    	FBTCompositeChild ChaseSequenceChild;
-    	ChaseSequenceChild.ChildComposite = ChaseSequence;
-        MainSelector->Children.Add(ChaseSequenceChild);
-        /*
-        // Add IsPlayerVisible decorator to chase sequence
-        UIsPlayerVisibleDecorator* VisibleDecorator = NewObject<UIsPlayerVisibleDecorator>(ChaseSequence);
-        ChaseSequence->Decorators.Add(VisibleDecorator);
-        
-        // Add MoveTo task for chasing player
-        UBTTask_MoveTo* ChaseTask = NewObject<UBTTask_MoveTo>(ChaseSequence);
-        ChaseTask->BlackboardKey.SelectedKeyName = "TargetLocation";
-        ChaseSequence->Children.Add(ChaseTask);
-        
-        // Create Patrol sequence
-        UBTComposite_Sequence* PatrolSequence = NewObject<UBTComposite_Sequence>(MainSelector);
-        MainSelector->Children.Add(PatrolSequence);
-        
-        // Add FindPatrolPoint task
-        UFindPatrolPointTask* FindPatrolTask = NewObject<UFindPatrolPointTask>(PatrolSequence);
-        PatrolSequence->Children.Add(FindPatrolTask);
-        
-        // Add MoveTo task for patrol movement
-        UBTTask_MoveTo* PatrolMoveTask = NewObject<UBTTask_MoveTo>(PatrolSequence);
-        PatrolMoveTask->BlackboardKey.SelectedKeyName = "TargetLocation";
-        PatrolSequence->Children.Add(PatrolMoveTask);*/
-    }
+	
+    // Create and initialize the custom Behavior Tree
+    BehaviorTree = NewObject<UBaseBehaviorTree>();
 }
 
 
@@ -118,7 +36,7 @@ void ABaseNMEai::BeginPlay()
 	}
 	if (BlackboardData && BehaviorTree)
 	{
-		UseBlackboard(BlackboardData, BlackboardComponent);
+		UseBlackboard(BehaviorTree->GetBlackboardAsset(), BlackboardComponent);
 		RunBehaviorTree(BehaviorTree);
 	}
 }
