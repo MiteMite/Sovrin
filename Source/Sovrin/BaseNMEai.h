@@ -57,7 +57,7 @@ private:
 	int32 CurrentPatrolPointIndexINT32 = 0;
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
-	class UBehaviorTree* BehaviorTree;	
+	class UBaseBehaviorTree* BehaviorTree;	
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	class UBlackboardData* BlackboardData;

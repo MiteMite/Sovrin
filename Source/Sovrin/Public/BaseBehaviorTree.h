@@ -24,16 +24,21 @@ public:
 	UBaseBehaviorTree();
 
 	UFUNCTION()
-	const UBlackboardComponent* GetBlackboardComponent() {return BaseBlackboard;}
+	UBlackboardComponent* GetBlackboardComponent();
 	UFUNCTION()
-	const UBehaviorTreeComponent* GetBehaviorTreeComponent(){return BaseBehaviorTreeComponent;}
+	UBlackboardData* GetBlackboardData();
+	UFUNCTION()
+	UBehaviorTreeComponent* GetBehaviorTreeComponent();
+	UFUNCTION()
+	UBehaviorTree* GetBehaviorTree();
+	UFUNCTION()
+	void SetBaseBlackboardComponent(UBlackboardComponent* BlackboardComponent);
 	
-	UPROPERTY(VisibleAnywhere, Category = "Blackboard")
-	UBlackboardData* BaseBlackboardData;
 private:
 	UPROPERTY(VisibleAnywhere, Category = "Blackboard")
-	UBlackboardComponent* BaseBlackboard;
-
+	UBlackboardComponent* BaseBlackboardComponent;
+	UPROPERTY(VisibleAnywhere, Category = "Blackboard")
+	UBlackboardData* BaseBlackboardData;
 	UPROPERTY(VisibleAnywhere, Category = "Blackboard")
 	UBehaviorTreeComponent* BaseBehaviorTreeComponent;
 	UPROPERTY(VisibleAnywhere, Category = "Blackboard")

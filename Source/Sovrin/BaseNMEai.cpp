@@ -2,7 +2,6 @@
 
 #include "BaseBehaviorTree.h"
 #include "Sovrin/BaseNME.h"
-#include "BehaviorTree/Tasks/BTTask_MoveTo.h"
 #include "Sovrin/Saoirse.h"
 
 ABaseNMEai::ABaseNMEai()
@@ -23,6 +22,7 @@ ABaseNMEai::ABaseNMEai()
 	
     // Create and initialize the custom Behavior Tree
     BehaviorTree = NewObject<UBaseBehaviorTree>();
+	
 }
 
 
@@ -34,22 +34,38 @@ void ABaseNMEai::BeginPlay()
 	{
 		SetControllerPatrolPoints(BaseNME->PatrolPoints);
 	}
-	if (BlackboardData && BehaviorTree)
+	
+	if (BehaviorTree && BlackboardComponent)
 	{
-		UseBlackboard(BehaviorTree->GetBlackboardAsset(), BlackboardComponent);
+		NMEPerceptionComponent->OnPerceptionUpdated.AddDynamic(this, &ABaseNMEai::OnTargetSighted);
+	}
+	
+	if (BehaviorTree)
+	{
+		UseBlackboard(BehaviorTree->GetBlackboardData(), BlackboardComponent);
+		BehaviorTree->SetBaseBlackboardComponent(BlackboardComponent);
 		RunBehaviorTree(BehaviorTree);
+		UE_LOG(LogTemp, Warning, TEXT("BehaviorTree and blackboard running"));
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to load behavior tree"));
 	}
 }
 void ABaseNMEai::OnTargetSighted(const TArray<AActor*>& Targets)
 {
-	UE_LOG(LogTemp, Display, TEXT("Handle Ai"));
+	//UE_LOG(LogTemp, Display, TEXT("Handle Ai"));
 	for (AActor* Target : Targets)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Target's name is: %s"),*Target->GetName());
 		if (Target->IsA(ASaoirse::StaticClass()))
 		{
+			//UE_LOG(LogTemp, Display, TEXT("Player detected: %s"),*Target->GetName());
+			if (BlackboardComponent)
+			{
+				BlackboardComponent->SetValueAsVector(TEXT("PlayerLocation"), Target->GetActorLocation());
+			}
+			//UE_LOG(LogTemp, Display, TEXT("Pursuing target!"));
 			MoveToLocation(Target->GetActorLocation());
-			UE_LOG(LogTemp, Display, TEXT("Pursuing target!"));
 		}
 	}
 }

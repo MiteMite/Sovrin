@@ -10,6 +10,7 @@ UDetectPlayerService::UDetectPlayerService()
 {
 	NodeName = TEXT("Detect Player");
 	Interval = 0.5f;
+	//UE_LOG(LogTemp, Warning, TEXT("My owner is %s"),*this->GetFullName());
 }
 
 void UDetectPlayerService::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
@@ -17,7 +18,6 @@ void UDetectPlayerService::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* No
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
-
 	if (!AIController && !BlackboardComponent)
 		return;
 

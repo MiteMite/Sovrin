@@ -17,11 +17,17 @@ EBTNodeResult::Type UFindPatrolPointTask::ExecuteTask(UBehaviorTreeComponent& Ow
 	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
 
 	if (!AIController && !BlackboardComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to load Ai controller and blackboard component"));
 		return EBTNodeResult::Failed;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("My Owner is: %s"), *OwnerComp.GetAIOwner()->GetName());
+		FVector NewLocation = OwnerComp.GetBlackboardComponent()->GetValueAsVector(TargetLocationKey.SelectedKeyName);
+		BlackboardComponent->SetValueAsVector(TargetLocationKey.SelectedKeyName, NewLocation);
+		//UE_LOG(LogTemp, Warning, TEXT("New location is: %s"), *NewLocation.ToString());
+		return EBTNodeResult::Succeeded;
+	}
 
-	FVector NewLocation = OwnerComp.GetBlackboardComponent()->GetValueAsVector(TargetLocationKey.SelectedKeyName);
-
-	BlackboardComponent->SetValueAsVector(TargetLocationKey.SelectedKeyName, NewLocation);
-	//UE_LOG(LogTemp, Warning, TEXT("New location is: %s"), *NewLocation.ToString());
-	return EBTNodeResult::Succeeded;
 }

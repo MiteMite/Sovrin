@@ -84,7 +84,7 @@ void UTimeTravel::PlaySnapshots(float DeltaTime, bool bRewinding)
 
 void UTimeTravel::FOnTimeTravelStarted()
 {
-	UE_LOG(LogTemp, Display, TEXT("Started Rewinding time"));
+	//UE_LOG(LogTemp, Display, TEXT("Started Rewinding time"));
 
 	IsRewinding = true;
 	IsFastForwarding = false;
@@ -93,7 +93,7 @@ void UTimeTravel::FOnTimeTravelStarted()
 
 void UTimeTravel::FOnTimeTravelEnded()
 {
-	UE_LOG(LogTemp, Display, TEXT("Stopped Rewinding time"));
+	//UE_LOG(LogTemp, Display, TEXT("Stopped Rewinding time"));
 
 	IsRewinding = false;
 }
