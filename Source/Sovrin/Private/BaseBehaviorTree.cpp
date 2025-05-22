@@ -60,7 +60,7 @@ UBaseBehaviorTree::UBaseBehaviorTree()
 		FBTCompositeChild ChaseSequenceChild;
 		ChaseSequenceChild.ChildComposite = ChaseSequence;
 		MainSelector->Children.Add(ChaseSequenceChild);
-		UE_LOG(LogTemp, Warning, TEXT("Root has this many children: %i"), BaseBehaviorTree->RootNode->GetChildrenNum());
+		//UE_LOG(LogTemp, Warning, TEXT("Root has this many children: %i"), BaseBehaviorTree->RootNode->GetChildrenNum());
 	}
 }
 

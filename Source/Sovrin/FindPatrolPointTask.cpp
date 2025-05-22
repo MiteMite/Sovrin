@@ -23,10 +23,9 @@ EBTNodeResult::Type UFindPatrolPointTask::ExecuteTask(UBehaviorTreeComponent& Ow
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("My Owner is: %s"), *OwnerComp.GetAIOwner()->GetName());
 		FVector NewLocation = OwnerComp.GetBlackboardComponent()->GetValueAsVector(TargetLocationKey.SelectedKeyName);
 		BlackboardComponent->SetValueAsVector(TargetLocationKey.SelectedKeyName, NewLocation);
-		//UE_LOG(LogTemp, Warning, TEXT("New location is: %s"), *NewLocation.ToString());
+		//UE_LOG(LogTemp, Warning, TEXT("New Patrol Point coordinates: %s"), *NewLocation.ToString());
 		return EBTNodeResult::Succeeded;
 	}
 
