@@ -23,14 +23,14 @@ EBTNodeResult::Type UFindPatrolPointTask::ExecuteTask(UBehaviorTreeComponent& Ow
 	}
 	else
 	{
-		if (AIController->GetBlackboardComponent()->GetValueAsBool("IsPlayerVisible")==false)
+		//UE_LOG(LogTemp, Warning, TEXT("Executing Find Patrol Point Task"));
+		FVector NewLocation = AIController->GetBlackboardComponent()->GetValueAsVector("PatrolPointLocation");
+		BlackboardComponent->SetValueAsVector("PatrolPointLocation", NewLocation);
+		if (OwnerComp.GetOwner()->IsA(ABaseNMEai::StaticClass()))
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("Executing Find Patrol Point Task"));
-			FVector NewLocation = AIController->GetBlackboardComponent()->GetValueAsVector("PatrolPointLocation");
-			BlackboardComponent->SetValueAsVector("PatrolPointLocation", NewLocation);
-			if (OwnerComp.GetOwner()->IsA(ABaseNMEai::StaticClass()))
+			//UE_LOG(LogTemp, Warning, TEXT("Moving to patrol point %s"), *NewLocation.ToString());
+			if (!BlackboardComponent->GetValueAsBool("bIsPlayerVisible"))
 			{
-				//UE_LOG(LogTemp, Warning, TEXT("Moving to patrol point %s"), *NewLocation.ToString());
 				AIController->MoveToLocation(NewLocation);
 				return EBTNodeResult::Succeeded;
 			}
@@ -43,7 +43,6 @@ EBTNodeResult::Type UFindPatrolPointTask::ExecuteTask(UBehaviorTreeComponent& Ow
 		{
 			return EBTNodeResult::Failed;
 		}
-
 	}
 }
 
@@ -51,5 +50,5 @@ void UFindPatrolPointTask::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uin
 {
 	Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);
 	
-	ExecuteTask(OwnerComp, NodeMemory);
+	//ExecuteTask(OwnerComp, NodeMemory);
 }

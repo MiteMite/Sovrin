@@ -35,15 +35,9 @@ EBTNodeResult::Type UChasePlayerTask::ExecuteTask(UBehaviorTreeComponent& OwnerC
 		return EBTNodeResult::Failed;
 	}
 	AIController = OwnerComp.GetAIOwner();
-	if (AIController->IsA(ABaseNMEai::StaticClass()))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Moving to player location %s"), *PlayerLocation.ToString());
-		AIController->MoveToLocation(PlayerLocation);
-		return EBTNodeResult::Succeeded;
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Owning actor is not a BaseNMEai"));
-		return EBTNodeResult::Failed;
-	}
+
+	//UE_LOG(LogTemp, Warning, TEXT("Moving to player location %s"), *PlayerLocation.ToString());
+	AIController->MoveToLocation(PlayerLocation);
+	return EBTNodeResult::Succeeded;
+
 }

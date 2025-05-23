@@ -1,7 +1,9 @@
 ﻿#include "BaseNMEai.h"
 
 #include "ChasePlayerTask.h"
+#include "NetworkMessage.h"
 #include "BehaviorTree/Decorators/BTDecorator_Blackboard.h"
+#include "BehaviorTree/BTDecorator.h"
 #include "Sovrin/BaseNME.h"
 #include "Sovrin/Saoirse.h"
 
@@ -54,6 +56,7 @@ ABaseNMEai::ABaseNMEai()
 		// Root sequence setup
 	    RootSequence = NewObject<UBTComposite_Sequence>(BehaviorTreeComponent);
 		RootSequence->NodeName = "Root";
+		RootSequence->SetOwner(this->GetOwner());
 	    BehaviorTree->RootNode = RootSequence;
 
 	    // DetectPlayerService is added as a service to the RootSequence
@@ -61,56 +64,51 @@ ABaseNMEai::ABaseNMEai()
 	    DetectService->SetOwner(this->GetOwner());
 	    RootSequence->Services.Add(DetectService);
 		
-		// Blackboard decorator to check if player is visible
-		UIsPlayerVisibleDecorator* IsPlayerVisibleDecorator = NewObject<UIsPlayerVisibleDecorator>(RootSequence);
-		IsPlayerVisibleDecorator->NodeName = "IsPlayerVisibleDecorator";
-		IsPlayerVisibleDecorator->SetOwner(this->GetOwner());
-
-		//Set the blackboard key for the player visibility
-		IsPlayerVisibleDecorator->IsPlayerVisibleKey.SelectedKeyName = IsPlayerVisible.EntryName;
-		
 	    // Main selector to differentiate between chase and patrol
 	    MainSelector = NewObject<UBTComposite_Selector>(RootSequence);
 		MainSelector->NodeName = "MainSelector";
+		MainSelector->SetOwner(this->GetOwner());
 	    FBTCompositeChild MainSelectorChild;
 	    MainSelectorChild.ChildComposite = MainSelector;
 	    RootSequence->Children.Add(MainSelectorChild);
+		
+		// *** CHASE SEQUENCE ***
+		ChaseSequence = NewObject<UBTComposite_Sequence>(MainSelector);
+		ChaseSequence->NodeName = "ChaseSequence";
+		FBTCompositeChild ChaseSequenceChild;
+		ChaseSequenceChild.ChildComposite = ChaseSequence;
+		MainSelector->Children.Add(ChaseSequenceChild);
+
+		// Chase Player Task inside ChaseSequence
+		ChasePlayerTask = NewObject<UChasePlayerTask>(ChaseSequence);
+		ChasePlayerTask->NodeName = "ChasePlayerTask";
+		ChasePlayerTask->SetOwner(this->GetOwner());
+		ChasePlayerTask->PlayerLocationKey.SelectedKeyName = PlayerLocation.EntryName; // PlayerLocation Blackboard Key
+		FBTCompositeChild ChasePlayerTaskChild;
+		ChasePlayerTaskChild.ChildTask = ChasePlayerTask;
+		ChaseSequence->Children.Add(ChasePlayerTaskChild);
 		
 		// *** PATROL SEQUENCE ***
 		PatrolSequence = NewObject<UBTComposite_Sequence>(MainSelector);
 		PatrolSequence->NodeName = "PatrolSequence";
 		FBTCompositeChild PatrolSequenceChild;
 		PatrolSequenceChild.ChildComposite = PatrolSequence;
-
-		// Add PatrolSequence to the MainSelector (executed if ChaseSequence fails)
-		MainSelector->Children.Add(PatrolSequenceChild);
-
+		
 		// Patrol Task (e.g., finding and moving to patrol points)
 		PatrolPointTask = NewObject<UFindPatrolPointTask>(PatrolSequence);
 		PatrolPointTask->NodeName = "PatrolPointTask";
 		PatrolPointTask->SetOwner(this->GetOwner());
-		//PatrolPointTask->GetTargetLocationKey().SelectedKeyName = PatrolPointLocation.EntryName; // PatrolPointLocation Blackboard Key
+		PatrolPointTask->GetTargetLocationKey().SelectedKeyName = PatrolPointLocation.EntryName; // PatrolPointLocation Blackboard Key
 		FBTCompositeChild PatrolTaskChild;
 		PatrolTaskChild.ChildTask = PatrolPointTask;
 		PatrolSequence->Children.Add(PatrolTaskChild);
+
+		// Blackboard decorator to check if player is visible
+		IsPlayerVisibleDecorator = NewObject<UIsPlayerVisibleDecorator>(PatrolSequence);
+		IsPlayerVisibleDecorator->NodeName = "Is Player visible";
+		IsPlayerVisibleDecorator->SetOwner(this->GetOwner());
+		IsPlayerVisibleDecorator->IsPlayerVisibleKey.SelectedKeyName = IsPlayerVisible.EntryName; // key to check
 		
-	    // *** CHASE SEQUENCE ***
-	    ChaseSequence = NewObject<UBTComposite_Sequence>(MainSelector);
-		ChaseSequence->NodeName = "ChaseSequence";
-	    FBTCompositeChild ChaseSequenceChild;
-	    ChaseSequenceChild.ChildComposite = ChaseSequence;
-
-	    // Add ChaseSequence to the MainSelector
-	    MainSelector->Children.Add(ChaseSequenceChild);
-
-	    // Chase Player Task inside ChaseSequence
-	    ChasePlayerTask = NewObject<UChasePlayerTask>(ChaseSequence);
-		ChasePlayerTask->NodeName = "ChasePlayerTask";
-		ChasePlayerTask->SetOwner(this->GetOwner());
-	    ChasePlayerTask->PlayerLocationKey.SelectedKeyName = PlayerLocation.EntryName; // PlayerLocation Blackboard Key
-	    FBTCompositeChild ChasePlayerTaskChild;
-	    ChasePlayerTaskChild.ChildTask = ChasePlayerTask;
-	    ChaseSequence->Children.Add(ChasePlayerTaskChild);
 	}
 	/*******************************************************************************************************************
 	*
@@ -195,7 +193,7 @@ void ABaseNMEai::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	
-	LogActiveBehaviorTreeNode();
+	//LogActiveBehaviorTreeNode();
 	//LogBlackboardKeys();
 }
 

@@ -7,6 +7,7 @@
 #include "BehaviorTree/Composites/BTComposite_Selector.h"
 #include "BehaviorTree/Composites/BTComposite_Sequence.h"
 #include "BehaviorTree/Decorators/BTDecorator_Blackboard.h"
+#include "BehaviorTree/BTDecorator.h"
 #include "IsPlayerVisibleDecorator.h"
 #include "BehaviorTree/Composites/BTComposite_SimpleParallel.h"
 #include "BehaviorTree/Tasks/BTTask_MoveTo.h"
@@ -66,6 +67,7 @@ private:
 	UDetectPlayerService* DetectService;
 	UFindPatrolPointTask* PatrolPointTask;
 	UChasePlayerTask* ChasePlayerTask;
+	UIsPlayerVisibleDecorator* IsPlayerVisibleDecorator;
 	//patrol points
 	UPROPERTY(EditAnywhere, Category = "AI")
 	TArray<AActor*> ControllerPatrolPoints;
