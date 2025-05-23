@@ -6,6 +6,8 @@
 #include "BehaviorTree/BehaviorTreeComponent.h"
 #include "BehaviorTree/Composites/BTComposite_Selector.h"
 #include "BehaviorTree/Composites/BTComposite_Sequence.h"
+#include "BehaviorTree/Decorators/BTDecorator_Blackboard.h"
+#include "IsPlayerVisibleDecorator.h"
 #include "BehaviorTree/Composites/BTComposite_SimpleParallel.h"
 #include "BehaviorTree/Tasks/BTTask_MoveTo.h"
 #include "BehaviorTree/Tasks/BTTask_Wait.h"
@@ -15,6 +17,7 @@
 #include "AITask_MoveTo.generated.h"
 #include "BehaviorTree/BlackboardData.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Vector.h"
+#include "BehaviorTree/Blackboard/BlackboardKeyType_Bool.h"
 #include "Perception/AISenseConfig_Sight.h"
 #include "ChasePlayerTask.h"
 #include "BaseNMEai.generated.h"
@@ -51,6 +54,8 @@ private:
 	UBlackboardKeyType_Vector* PlayerLocationKeyType = NewObject<UBlackboardKeyType_Vector>();
 	FBlackboardEntry PatrolPointLocation =  *new FBlackboardEntry();
 	UBlackboardKeyType_Vector* PatrolPointLocationKeyType = NewObject<UBlackboardKeyType_Vector>();
+	FBlackboardEntry IsPlayerVisible = *new FBlackboardEntry();
+	UBlackboardKeyType_Bool* IsPlayerVisibleKeyType = NewObject<UBlackboardKeyType_Bool>();
 	//Behavior tree nodes services and tasks
 	UBTComposite_Sequence* RootSequence;
 	UBTComposite_Selector* MainSelector;

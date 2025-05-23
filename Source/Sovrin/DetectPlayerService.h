@@ -23,7 +23,7 @@ protected:
 private:
 	void CheckPlayerDetection(UBehaviorTreeComponent OwnerComp);
 	AAIController* AIController;
-	
+	bool bIsPlayerVisible = false;
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float DetectionRadius = 500.0f;
 

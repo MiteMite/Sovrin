@@ -25,7 +25,8 @@ void UDetectPlayerService::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* No
 	{
 		UE_LOG(LogTemp, Warning, TEXT("AI Controller is null"));
 		return;
-	} 
+	}
+	
 	if (AIController->GetBlackboardComponent() && AIController->GetPerceptionComponent())
 	{
 		
@@ -35,13 +36,25 @@ void UDetectPlayerService::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* No
 		{
 			if (Actor->IsA(ASaoirse::StaticClass()))
 			{
+				UE_LOG(LogTemp, Warning, TEXT("Player detected %s"), *Actor->GetName());
+				bIsPlayerVisible = true;
+				AIController->GetBlackboardComponent()->SetValueAsBool("bIsPlayerVisible", bIsPlayerVisible);
 				AIController->GetBlackboardComponent()->SetValueAsVector("PlayerLocation", Actor->GetActorLocation());
+				AIController->MoveToLocation(Actor->GetActorLocation());
 				//AIController->GetBlackboardComponent()->GetValueAsVector("PlayerLocation").Set(Actor->GetActorLocation().X, Actor->GetActorLocation().Y, Actor->GetActorLocation().Z);
 				//UE_LOG(LogTemp, Display, TEXT("Player location value on blackboard: %s"), *OwnerComp.GetBlackboardComponent()->GetValueAsVector("PlayerLocation").ToString());
 				//UE_LOG(LogTemp, Display, TEXT("Player detected at location: %s"), *Actor->GetActorLocation().ToString());
 				break;
 			}
+			if (Actor==nullptr || Actor->IsA(ASaoirse::StaticClass()) == false)
+			{
+				bIsPlayerVisible = false;
+				AIController->GetBlackboardComponent()->SetValueAsBool("bIsPlayerVisible", bIsPlayerVisible);
+				UE_LOG(LogTemp, Warning, TEXT("Player is not visible"));
+				break;
+			}
 		}
+		
 	}
 	else
 	{

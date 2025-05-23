@@ -15,10 +15,12 @@ class SOVRIN_API UIsPlayerVisibleDecorator : public UBTDecorator
 	GENERATED_BODY()
 public:
 	UIsPlayerVisibleDecorator();
-
+	
+	UPROPERTY(EditAnywhere, Category = "Blackboard")
+	FBlackboardKeySelector IsPlayerVisibleKey;
+	
 protected:
 	virtual bool CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const override;
 
-	UPROPERTY(EditAnywhere, Category = "Blackboard")
-	FBlackboardKeySelector PlayerKey;
+
 };

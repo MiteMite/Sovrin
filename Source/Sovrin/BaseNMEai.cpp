@@ -1,7 +1,7 @@
 ﻿#include "BaseNMEai.h"
 
-#include "BaseBehaviorTree.h"
 #include "ChasePlayerTask.h"
+#include "BehaviorTree/Decorators/BTDecorator_Blackboard.h"
 #include "Sovrin/BaseNME.h"
 #include "Sovrin/Saoirse.h"
 
@@ -22,11 +22,11 @@ ABaseNMEai::ABaseNMEai()
 	NMEPerceptionComponent->SetDominantSense(SightSenseConfig->GetSenseImplementation());
 	
 	// Create and initialize the custom Behavior Tree
-	BehaviorTree = CreateDefaultSubobject<UBaseBehaviorTree>(TEXT("BehaviorTree"));
+	BehaviorTree = CreateDefaultSubobject<UBehaviorTree>(TEXT("BehaviorTree"));
 	BlackboardData = CreateDefaultSubobject<UBlackboardData>(TEXT("BlackboardData"));
 	BlackboardComponent = CreateDefaultSubobject<UBlackboardComponent>(TEXT("BlackboardComponent"));
 	BehaviorTreeComponent = CreateDefaultSubobject<UBehaviorTreeComponent>(TEXT("BehaviorTreeComponent"));
-	BlackboardComponent->InitializeBlackboard(*BlackboardData);
+	
 	//Setup Blackboard key values
 	PlayerLocation.EntryName = FName("PlayerLocation");
 	PlayerLocation.KeyType = PlayerLocationKeyType;
@@ -34,11 +34,16 @@ ABaseNMEai::ABaseNMEai()
 	PatrolPointLocation.EntryName = FName("PatrolPointLocation");
 	PatrolPointLocation.KeyType = PatrolPointLocationKeyType;
 	BlackboardData->Keys.Add(PatrolPointLocation);
+	IsPlayerVisible.EntryName = FName("IsPlayerVisible");
+	IsPlayerVisible.KeyType = IsPlayerVisibleKeyType;
+	BlackboardData->Keys.Add(IsPlayerVisible);
+	
 	//Set current patrol point index to 0
 	CurrentPatrolPointIndexINT32 = 0;
 	//Set patrol points to empty array
 	ControllerPatrolPoints.Empty();
-
+	//Initialize Blackboard
+	BlackboardComponent->InitializeBlackboard(*BlackboardData);
 	/*******************************************************************************************************************
 	 *
 	 *Begin Setup of node sequencer 
@@ -55,7 +60,15 @@ ABaseNMEai::ABaseNMEai()
 	    DetectService = NewObject<UDetectPlayerService>(RootSequence);
 	    DetectService->SetOwner(this->GetOwner());
 	    RootSequence->Services.Add(DetectService);
+		
+		// Blackboard decorator to check if player is visible
+		UIsPlayerVisibleDecorator* IsPlayerVisibleDecorator = NewObject<UIsPlayerVisibleDecorator>(RootSequence);
+		IsPlayerVisibleDecorator->NodeName = "IsPlayerVisibleDecorator";
+		IsPlayerVisibleDecorator->SetOwner(this->GetOwner());
 
+		//Set the blackboard key for the player visibility
+		IsPlayerVisibleDecorator->IsPlayerVisibleKey.SelectedKeyName = IsPlayerVisible.EntryName;
+		
 	    // Main selector to differentiate between chase and patrol
 	    MainSelector = NewObject<UBTComposite_Selector>(RootSequence);
 		MainSelector->NodeName = "MainSelector";
@@ -94,7 +107,7 @@ ABaseNMEai::ABaseNMEai()
 	    ChasePlayerTask = NewObject<UChasePlayerTask>(ChaseSequence);
 		ChasePlayerTask->NodeName = "ChasePlayerTask";
 		ChasePlayerTask->SetOwner(this->GetOwner());
-	    //ChasePlayerTask->PlayerLocationKey.SelectedKeyName = PlayerLocation.EntryName; // PlayerLocation Blackboard Key
+	    ChasePlayerTask->PlayerLocationKey.SelectedKeyName = PlayerLocation.EntryName; // PlayerLocation Blackboard Key
 	    FBTCompositeChild ChasePlayerTaskChild;
 	    ChasePlayerTaskChild.ChildTask = ChasePlayerTask;
 	    ChaseSequence->Children.Add(ChasePlayerTaskChild);
@@ -110,11 +123,23 @@ void ABaseNMEai::BeginPlay()
 {
 	Super::BeginPlay();
 	// Get patrol points from the controlled pawn
-
-	if (GetParentActor())
+	APawn* ControlledPawn = GetPawn();
+	if (!ControlledPawn)
 	{
-		SetControllerPatrolPoints(Cast<ABaseNME>(GetParentActor())->PatrolPoints);
+		UE_LOG(LogTemp, Warning, TEXT("Controlled Pawn is null"));
+		return;
+	}
+	ABaseNME* ParentBaseNME = Cast<ABaseNME>(ControlledPawn);
+	if (!ParentBaseNME)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Controlled Pawn is not a BaseNME"));
+		return;
+	}
+	if (ParentBaseNME->IsA(ABaseNME::StaticClass()))
+	{
+		SetControllerPatrolPoints(ParentBaseNME->PatrolPoints);
 		BlackboardComponent->SetValueAsVector("PatrolPointLocation", GetCurrentPatrolPoint()->GetActorLocation());
+		UE_LOG(LogTemp, Warning, TEXT("Patrol point location is %s"), *BlackboardComponent->GetValueAsVector("PatrolPointLocation").ToString());
 		GetNextPatrolPoint();
 	}
 	else
@@ -170,9 +195,10 @@ void ABaseNMEai::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	
-	//LogActiveBehaviorTreeNode();
-	LogBlackboardKeys();
+	LogActiveBehaviorTreeNode();
+	//LogBlackboardKeys();
 }
+
 
 void ABaseNMEai::SetControllerPatrolPoints(TArray<AActor*> PatrolPoints)
 {
