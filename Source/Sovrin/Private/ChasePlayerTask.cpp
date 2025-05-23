@@ -4,6 +4,7 @@
 #include "ChasePlayerTask.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
+#include "Sovrin/BaseNMEai.h"
 
 UChasePlayerTask::UChasePlayerTask()
 {
@@ -14,6 +15,7 @@ UChasePlayerTask::UChasePlayerTask()
 
 EBTNodeResult::Type UChasePlayerTask::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
+	//UE_LOG(LogTemp, Display, TEXT("Executing Chase Player Task"));
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	if (!AIController)
 	{
@@ -26,14 +28,22 @@ EBTNodeResult::Type UChasePlayerTask::ExecuteTask(UBehaviorTreeComponent& OwnerC
 		return EBTNodeResult::Failed;
 	}
 
-	FVector PlayerLocation = BlackboardComponent->GetValueAsVector(PlayerLocationKey.SelectedKeyName);
+	FVector PlayerLocation = BlackboardComponent->GetValueAsVector("PlayerLocation");
 	if (PlayerLocation.IsZero())
 	{
 		UE_LOG(LogTemp, Warning, TEXT("No Player location is found"));
 		return EBTNodeResult::Failed;
 	}
-
-	AIController->MoveToLocation(PlayerLocation);
-	UE_LOG(LogTemp, Display, TEXT("Chasing player at location: %s"), *PlayerLocation.ToString());
-	return EBTNodeResult::Succeeded;
+	AIController = OwnerComp.GetAIOwner();
+	if (AIController->IsA(ABaseNMEai::StaticClass()))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Moving to player location %s"), *PlayerLocation.ToString());
+		AIController->MoveToLocation(PlayerLocation);
+		return EBTNodeResult::Succeeded;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Owning actor is not a BaseNMEai"));
+		return EBTNodeResult::Failed;
+	}
 }

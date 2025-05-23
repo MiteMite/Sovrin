@@ -16,11 +16,8 @@ class SOVRIN_API UChasePlayerTask : public UBTTaskNode
 
 public:
 	UChasePlayerTask();
-
-protected:
-	EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-
-private:
 	UPROPERTY(EditAnywhere, Category = "Blackboard")
 	FBlackboardKeySelector PlayerLocationKey;
+protected:
+	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
 };

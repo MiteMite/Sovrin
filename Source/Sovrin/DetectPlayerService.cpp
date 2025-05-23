@@ -12,6 +12,7 @@ UDetectPlayerService::UDetectPlayerService()
 {
 	NodeName = TEXT("Detect Player Service");
 	Interval = 0.5f;
+	AIController = nullptr;
 	//UE_LOG(LogTemp, Warning, TEXT("My owner is %s"),*this->GetFullName());
 }
 
@@ -35,7 +36,9 @@ void UDetectPlayerService::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* No
 			if (Actor->IsA(ASaoirse::StaticClass()))
 			{
 				AIController->GetBlackboardComponent()->SetValueAsVector("PlayerLocation", Actor->GetActorLocation());
-				UE_LOG(LogTemp, Display, TEXT("Player detected: %s"), *Actor->GetName());
+				//AIController->GetBlackboardComponent()->GetValueAsVector("PlayerLocation").Set(Actor->GetActorLocation().X, Actor->GetActorLocation().Y, Actor->GetActorLocation().Z);
+				//UE_LOG(LogTemp, Display, TEXT("Player location value on blackboard: %s"), *OwnerComp.GetBlackboardComponent()->GetValueAsVector("PlayerLocation").ToString());
+				//UE_LOG(LogTemp, Display, TEXT("Player detected at location: %s"), *Actor->GetActorLocation().ToString());
 				break;
 			}
 		}

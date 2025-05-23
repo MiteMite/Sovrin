@@ -46,56 +46,58 @@ ABaseNMEai::ABaseNMEai()
 	 ******************************************************************************************************************/
 	if (BehaviorTree && BehaviorTreeComponent)
 	{
-		// Create root Sequence node
-		RootSequence = NewObject<UBTComposite_Sequence>(BehaviorTreeComponent);
-		RootSequence->NodeName = TEXT("Root");
-		BehaviorTree->RootNode = RootSequence;
-		
-		// Add DetectPlayerService as a service to the root
-		DetectService = NewObject<UDetectPlayerService>(RootSequence);
-		DetectService->SetOwner(this->GetOwner());
-		RootSequence->Services.Add(DetectService);
-		
-		//Chase Player sequence
-		ChaseSequence = NewObject<UBTComposite_Sequence>(RootSequence);
-		ChaseSequence->NodeName = TEXT("Chase Sequence");
-		FBTCompositeChild ChaseSequenceChild;
-		ChaseSequenceChild.ChildComposite = ChaseSequence;
-		RootSequence->Children.Add(ChaseSequenceChild);
-		
-		//Chase Player Task
-		UChasePlayerTask* ChasePlayerTask = NewObject<UChasePlayerTask>(ChaseSequence);
-		ChasePlayerTask->SetOwner(this->GetOwner());
-		ChasePlayerTask->NodeName = TEXT("Chase Player Task");
-		ChaseSequenceChild.ChildTask = ChasePlayerTask;
-		
-		// Create main Selector node and its child connection
-		MainSelector = NewObject<UBTComposite_Selector>(RootSequence);
-		MainSelector->NodeName = TEXT("Main Selector");
-		FBTCompositeChild MainSelectorChild;
-		MainSelectorChild.ChildComposite = MainSelector;
-		RootSequence->Children.Add(MainSelectorChild);
+		// Root sequence setup
+	    RootSequence = NewObject<UBTComposite_Sequence>(BehaviorTreeComponent);
+		RootSequence->NodeName = "Root";
+	    BehaviorTree->RootNode = RootSequence;
 
-		//create patrol point selector
-		PatrolSelector = NewObject<UBTComposite_Selector>(MainSelector);
-		PatrolSelector->NodeName = TEXT("Patrol Selector");
-		FBTCompositeChild PatrolSelectorChild;
-		PatrolSelectorChild.ChildComposite = PatrolSelector;
-		MainSelector->Children.Add(PatrolSelectorChild);
+	    // DetectPlayerService is added as a service to the RootSequence
+	    DetectService = NewObject<UDetectPlayerService>(RootSequence);
+	    DetectService->SetOwner(this->GetOwner());
+	    RootSequence->Services.Add(DetectService);
+
+	    // Main selector to differentiate between chase and patrol
+	    MainSelector = NewObject<UBTComposite_Selector>(RootSequence);
+		MainSelector->NodeName = "MainSelector";
+	    FBTCompositeChild MainSelectorChild;
+	    MainSelectorChild.ChildComposite = MainSelector;
+	    RootSequence->Children.Add(MainSelectorChild);
 		
-		//find patrol point task
-		PatrolPointTask = NewObject<UFindPatrolPointTask>(PatrolSelector);
-		PatrolPointTask->SetOwner(this->GetOwner());
-		PatrolPointTask->NodeName = TEXT("Patrol Point Task");
-		PatrolSelectorChild.ChildTask = PatrolPointTask;
-		
-		//Behavior Tree Composite for Patrol
-		PatrolSequence = NewObject<UBTComposite_Sequence>(PatrolSelector);
-		PatrolSequence->NodeName = TEXT("Patrol Sequence");
+		// *** PATROL SEQUENCE ***
+		PatrolSequence = NewObject<UBTComposite_Sequence>(MainSelector);
+		PatrolSequence->NodeName = "PatrolSequence";
 		FBTCompositeChild PatrolSequenceChild;
 		PatrolSequenceChild.ChildComposite = PatrolSequence;
-		PatrolSelector->Children.Add(PatrolSequenceChild);
+
+		// Add PatrolSequence to the MainSelector (executed if ChaseSequence fails)
+		MainSelector->Children.Add(PatrolSequenceChild);
+
+		// Patrol Task (e.g., finding and moving to patrol points)
+		PatrolPointTask = NewObject<UFindPatrolPointTask>(PatrolSequence);
+		PatrolPointTask->NodeName = "PatrolPointTask";
+		PatrolPointTask->SetOwner(this->GetOwner());
+		//PatrolPointTask->GetTargetLocationKey().SelectedKeyName = PatrolPointLocation.EntryName; // PatrolPointLocation Blackboard Key
+		FBTCompositeChild PatrolTaskChild;
+		PatrolTaskChild.ChildTask = PatrolPointTask;
+		PatrolSequence->Children.Add(PatrolTaskChild);
 		
+	    // *** CHASE SEQUENCE ***
+	    ChaseSequence = NewObject<UBTComposite_Sequence>(MainSelector);
+		ChaseSequence->NodeName = "ChaseSequence";
+	    FBTCompositeChild ChaseSequenceChild;
+	    ChaseSequenceChild.ChildComposite = ChaseSequence;
+
+	    // Add ChaseSequence to the MainSelector
+	    MainSelector->Children.Add(ChaseSequenceChild);
+
+	    // Chase Player Task inside ChaseSequence
+	    ChasePlayerTask = NewObject<UChasePlayerTask>(ChaseSequence);
+		ChasePlayerTask->NodeName = "ChasePlayerTask";
+		ChasePlayerTask->SetOwner(this->GetOwner());
+	    //ChasePlayerTask->PlayerLocationKey.SelectedKeyName = PlayerLocation.EntryName; // PlayerLocation Blackboard Key
+	    FBTCompositeChild ChasePlayerTaskChild;
+	    ChasePlayerTaskChild.ChildTask = ChasePlayerTask;
+	    ChaseSequence->Children.Add(ChasePlayerTaskChild);
 	}
 	/*******************************************************************************************************************
 	*
@@ -108,10 +110,18 @@ void ABaseNMEai::BeginPlay()
 {
 	Super::BeginPlay();
 	// Get patrol points from the controlled pawn
-	if (ABaseNME* BaseNME = Cast<ABaseNME>(GetPawn()))
+
+	if (GetParentActor())
 	{
-		SetControllerPatrolPoints(BaseNME->PatrolPoints);
+		SetControllerPatrolPoints(Cast<ABaseNME>(GetParentActor())->PatrolPoints);
+		BlackboardComponent->SetValueAsVector("PatrolPointLocation", GetCurrentPatrolPoint()->GetActorLocation());
+		GetNextPatrolPoint();
 	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Owning actor is not a BaseNME"));
+	}
+
 	
 	if (BehaviorTree && BlackboardComponent)
 	{
@@ -123,19 +133,16 @@ void ABaseNMEai::BeginPlay()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Failed to load behavior tree or blackboard component"));
 	}
-	
-
 }
 
 UBehaviorTreeComponent* ABaseNMEai::GetBehaviorTreeComponent()
 {
-	
-	return BehaviorTreeComponent; // BrainComponent is inherited from AAIController
+	return Cast<UBehaviorTreeComponent>(BrainComponent); // BrainComponent is inherited from AAIController
 }
 
 void ABaseNMEai::LogActiveBehaviorTreeNode()
 {
-	UBehaviorTreeComponent* BTComponent = GetBehaviorTreeComponent();
+	UBehaviorTreeComponent* BTComponent = ABaseNMEai::GetBehaviorTreeComponent();
 	if (!BTComponent)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Failed to load behavior tree component"));
@@ -145,68 +152,26 @@ void ABaseNMEai::LogActiveBehaviorTreeNode()
 	ActiveNode = BTComponent->GetActiveNode();
 	if (ActiveNode)
 	{
-		UE_LOG(LogTemp, Display, TEXT("Active Node is: %s"), *ActiveNode->GetName());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No active node currently"));
-	}
-
-	ActiveTask = Cast<UBTTaskNode>(ActiveNode);
-	if (ActiveTask)
-	{
-		UE_LOG(LogTemp, Display, TEXT("Active Task is: %s"), *ActiveTask->GetName());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No active task currently"));
+		UE_LOG(LogTemp, Warning, TEXT("Active Node is: %s"), *ActiveNode->GetNodeName());
 	}
 }
 
+void ABaseNMEai::LogBlackboardKeys()
+{
+	for (FBlackboardEntry& Key : BlackboardData->Keys)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Blackboard Key Name: %s"), *Key.EntryName.ToString());
+		UE_LOG(LogTemp, Warning, TEXT("Blackboard Key Value: %s"), *BlackboardComponent->GetValueAsVector(Key.EntryName).ToString());
+	}
+	
+}
 
 void ABaseNMEai::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 	
-	LogActiveBehaviorTreeNode();
-}
-
-void ABaseNMEai::OnTargetSighted(const TArray<AActor*>& Targets)
-{
-	//UE_LOG(LogTemp, Display, TEXT("Handle Ai"));
-	for (AActor* Target : Targets)
-	{
-		if (Target->IsA(ASaoirse::StaticClass()))
-		{
-			//UE_LOG(LogTemp, Display, TEXT("Player detected: %s"),*Target->GetName());
-			if (BlackboardComponent)
-			{
-				BlackboardComponent->SetValueAsVector(TEXT("PlayerLocation"), Target->GetActorLocation());
-			}
-			//UE_LOG(LogTemp, Display, TEXT("Pursuing target!"));
-			//MoveToLocation(Target->GetActorLocation());
-		}
-	}
-}
-void ABaseNMEai::OnPatrolPointTask()
-{
-	UE_LOG(LogTemp, Display, TEXT("Patrol point task"));
-	if (ControllerPatrolPoints.Num()>0)
-	{
-		CurrentPatrolPointIndexINT32 = (CurrentPatrolPointIndexINT32 + 1) % ControllerPatrolPoints.Num();//increment patrol point index
-		AActor* NextPatrolPoint = ControllerPatrolPoints[CurrentPatrolPointIndexINT32];
-
-		if (BlackboardComponent && NextPatrolPoint)
-		{
-			UE_LOG(LogTemp, Display, TEXT("Patrol point location: %s"),*NextPatrolPoint->GetName());
-			BlackboardComponent->SetValueAsVector(TEXT("PatrolPointLocation"), NextPatrolPoint->GetActorLocation());
-		}
-		if (NextPatrolPoint)
-		{
-			UE_LOG(LogTemp, Display, TEXT("Moving to patrol point!"));
-			MoveToLocation(NextPatrolPoint->GetActorLocation());
-		}
-	}
+	//LogActiveBehaviorTreeNode();
+	LogBlackboardKeys();
 }
 
 void ABaseNMEai::SetControllerPatrolPoints(TArray<AActor*> PatrolPoints)

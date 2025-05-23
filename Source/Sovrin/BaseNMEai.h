@@ -26,12 +26,6 @@ class SOVRIN_API ABaseNMEai : public AAIController
 public:
 	ABaseNMEai();
 	
-	UFUNCTION()
-	void OnTargetSighted(const TArray<AActor*>& Targets);
-
-	UFUNCTION()
-	void OnPatrolPointTask();
-	
 	UFUNCTION(BlueprintCallable, Category="AI|Patrol")
 	TArray<AActor*> GetControllerPatrolPoints();
 	
@@ -49,8 +43,9 @@ public:
 private:
 	UBehaviorTreeComponent* GetBehaviorTreeComponent();
 	void LogActiveBehaviorTreeNode();
+	void LogBlackboardKeys();
 	const UBTNode* ActiveNode;
-	const UBTTaskNode* ActiveTask;
+	TArray<UBTTaskNode*> ActiveTasks;
 	//blackboard keys
 	FBlackboardEntry PlayerLocation = *new FBlackboardEntry();
 	UBlackboardKeyType_Vector* PlayerLocationKeyType = NewObject<UBlackboardKeyType_Vector>();
@@ -65,6 +60,7 @@ private:
 	UBTComposite_Sequence* PatrolPointTaskSequence;
 	UDetectPlayerService* DetectService;
 	UFindPatrolPointTask* PatrolPointTask;
+	UChasePlayerTask* ChasePlayerTask;
 	//patrol points
 	UPROPERTY(EditAnywhere, Category = "AI")
 	TArray<AActor*> ControllerPatrolPoints;
