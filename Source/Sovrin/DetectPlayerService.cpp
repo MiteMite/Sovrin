@@ -39,26 +39,25 @@ void UDetectPlayerService::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* No
 				if (Actor->IsA(ASaoirse::StaticClass()))
 				{
 					bIsPlayerVisible = true;
-					AIController->GetBlackboardComponent()->SetValueAsBool("bIsPlayerVisible", bIsPlayerVisible);
+					AIController->GetBlackboardComponent()->SetValueAsBool("IsPlayerVisible", bIsPlayerVisible);
 					AIController->GetBlackboardComponent()->SetValueAsVector("PlayerLocation", Actor->GetActorLocation());
-					//AIController->MoveToLocation(Actor->GetActorLocation());
 				}
 				else
 				{
 					bIsPlayerVisible = false;
-					AIController->GetBlackboardComponent()->SetValueAsBool("bIsPlayerVisible", bIsPlayerVisible);
+					AIController->GetBlackboardComponent()->SetValueAsBool("IsPlayerVisible", bIsPlayerVisible);
 				}
 			}
 		}
 		else
 		{
 			bIsPlayerVisible = false;
-			AIController->GetBlackboardComponent()->SetValueAsBool("bIsPlayerVisible", bIsPlayerVisible);
+			AIController->GetBlackboardComponent()->SetValueAsBool("IsPlayerVisible", bIsPlayerVisible);
 		}
 	}
 	else
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Blackboard or Perception component is null"));
 	}
-	UE_LOG(LogTemp, Warning, TEXT("IsPlayerVisible: %d"), bIsPlayerVisible);
+	//UE_LOG(LogTemp, Warning, TEXT("IsPlayerVisible: %d"), AIController->GetBlackboardComponent()->GetValueAsBool("IsPlayerVisible"));
 }

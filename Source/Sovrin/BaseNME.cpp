@@ -25,10 +25,6 @@ ABaseNME::ABaseNME()
 void ABaseNME::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	/*UAnimInstance* AnimInstance = this->GetMesh()->GetAnimInstance();
-	AnimInstance->AddCurveValue(TEXT("GroundSpeed"),this->GetVelocity().Size());
-	UE_LOG(LogTemp, Display, TEXT("My Current speed is %f"),this->GetVelocity().Size());
-	*/
 }
 
 ABaseNME::~ABaseNME()

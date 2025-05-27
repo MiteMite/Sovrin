@@ -15,7 +15,7 @@ EBTNodeResult::Type UFindPatrolPointTask::ExecuteTask(UBehaviorTreeComponent& Ow
 {
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	UBlackboardComponent* BlackboardComponent = AIController->GetBlackboardComponent();
-
+	//UE_LOG(LogTemp, Warning, TEXT("Executing find patrol point task"));
 	if (!AIController && !BlackboardComponent )
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Failed to load Ai controller and blackboard component"));
@@ -23,21 +23,12 @@ EBTNodeResult::Type UFindPatrolPointTask::ExecuteTask(UBehaviorTreeComponent& Ow
 	}
 	else
 	{
-		//UE_LOG(LogTemp, Warning, TEXT("Executing Find Patrol Point Task"));
 		FVector NewLocation = AIController->GetBlackboardComponent()->GetValueAsVector("PatrolPointLocation");
 		BlackboardComponent->SetValueAsVector("PatrolPointLocation", NewLocation);
 		if (OwnerComp.GetOwner()->IsA(ABaseNMEai::StaticClass()))
 		{
-			//UE_LOG(LogTemp, Warning, TEXT("Moving to patrol point %s"), *NewLocation.ToString());
-			if (!BlackboardComponent->GetValueAsBool("bIsPlayerVisible"))
-			{
-				AIController->MoveToLocation(NewLocation);
-				return EBTNodeResult::Succeeded;
-			}
-			else
-			{
-				return EBTNodeResult::Failed;
-			}
+			OnTaskFinished(OwnerComp, NodeMemory, EBTNodeResult::Succeeded);
+			return EBTNodeResult::Succeeded;
 		}
 		else
 		{
@@ -49,6 +40,18 @@ EBTNodeResult::Type UFindPatrolPointTask::ExecuteTask(UBehaviorTreeComponent& Ow
 void UFindPatrolPointTask::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult)
 {
 	Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);
+
+	UE_LOG(LogTemp, Warning, TEXT("Find Patrol Point Task Finished"));
 	
-	//ExecuteTask(OwnerComp, NodeMemory);
+	AAIController* AIController = OwnerComp.GetAIOwner();
+	UBlackboardComponent* BlackboardComponent = AIController->GetBlackboardComponent();
+	if (TaskResult == EBTNodeResult::Succeeded)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Moving to patrol point %s"), *BlackboardComponent->GetValueAsVector("PatrolPointLocation").ToString());
+		AIController->MoveToLocation(BlackboardComponent->GetValueAsVector("PatrolPointLocation"));
+	}
+	if (TaskResult != EBTNodeResult::Succeeded)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to find patrol point"));
+	}
 }

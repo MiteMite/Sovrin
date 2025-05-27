@@ -66,6 +66,7 @@ private:
 	UBTComposite_Sequence* PatrolPointTaskSequence;
 	UDetectPlayerService* DetectService;
 	UFindPatrolPointTask* PatrolPointTask;
+	UBTTask_MoveTo* MoveToTask;
 	UChasePlayerTask* ChasePlayerTask;
 	UIsPlayerVisibleDecorator* IsPlayerVisibleDecorator;
 	//patrol points

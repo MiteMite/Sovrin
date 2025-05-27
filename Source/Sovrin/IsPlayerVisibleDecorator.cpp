@@ -15,6 +15,10 @@ bool UIsPlayerVisibleDecorator::CalculateRawConditionValue(UBehaviorTreeComponen
 	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
 	if (!BlackboardComponent)
 		return false;
-	
-	return BlackboardComponent->GetValueAsObject(IsPlayerVisibleKey.SelectedKeyName)!=nullptr;
+
+	if (BlackboardComponent)
+	{
+		return false;
+	}
+	return true;
 }

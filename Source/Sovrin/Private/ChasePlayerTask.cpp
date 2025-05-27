@@ -11,11 +11,12 @@ UChasePlayerTask::UChasePlayerTask()
 	NodeName = "Chase Player";
 
 	PlayerLocationKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UChasePlayerTask, PlayerLocationKey));
+	
 }
 
 EBTNodeResult::Type UChasePlayerTask::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	//UE_LOG(LogTemp, Display, TEXT("Executing Chase Player Task"));
+	//UE_LOG(LogTemp, Warning, TEXT("Executing chase player task"));
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	if (!AIController)
 	{
@@ -35,9 +36,45 @@ EBTNodeResult::Type UChasePlayerTask::ExecuteTask(UBehaviorTreeComponent& OwnerC
 		return EBTNodeResult::Failed;
 	}
 	AIController = OwnerComp.GetAIOwner();
+	if (BlackboardComponent->GetValueAsBool("IsPlayerVisible"))
+	{
+		OnTaskFinished(OwnerComp, NodeMemory, EBTNodeResult::Succeeded);
+		return EBTNodeResult::Succeeded;
+	}
+	else
+	{
+		return EBTNodeResult::Failed;
+	}
+	
+}
 
-	//UE_LOG(LogTemp, Warning, TEXT("Moving to player location %s"), *PlayerLocation.ToString());
-	AIController->MoveToLocation(PlayerLocation);
-	return EBTNodeResult::Succeeded;
-
+void UChasePlayerTask::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult)
+{
+	Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);
+	
+	UE_LOG(LogTemp, Warning, TEXT("Chase Player Task Finished"));
+	
+	AAIController* AIController = OwnerComp.GetAIOwner();
+	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
+	if (!AIController)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to load Ai controller"));
+		return;
+	}
+	if (!BlackboardComponent)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to load blackboard component"));
+		return;
+	}
+	
+	if (TaskResult == EBTNodeResult::Succeeded)
+	{
+		FVector PlayerLocation = BlackboardComponent->GetValueAsVector("PlayerLocation");
+		UE_LOG(LogTemp, Warning, TEXT("Moving to player location %s"),*PlayerLocation.ToString());
+		AIController->MoveToLocation(PlayerLocation);
+	}
+	if (TaskResult != EBTNodeResult::Succeeded)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Failed to chase player"));
+	}
 }
