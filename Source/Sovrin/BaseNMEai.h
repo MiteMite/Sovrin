@@ -14,6 +14,7 @@
 #include "BehaviorTree/Tasks/BTTask_Wait.h"
 #include "DetectPlayerService.h"
 #include "FindPatrolPointTask.h"
+#include "MoveToPatrolPointTask.h"
 #include "IsPlayerVisibleDecorator.h"
 #include "AITask_MoveTo.generated.h"
 #include "BehaviorTree/BlackboardData.h"
@@ -59,15 +60,14 @@ private:
 	UBlackboardKeyType_Bool* IsPlayerVisibleKeyType = NewObject<UBlackboardKeyType_Bool>();
 	//Behavior tree nodes services and tasks
 	UBTComposite_Sequence* RootSequence;
+	UDetectPlayerService* DetectService;
 	UBTComposite_Selector* MainSelector;
 	UBTComposite_Sequence* ChaseSequence;
-	UBTComposite_Selector* PatrolSelector;
+	UChasePlayerTask* ChasePlayerTask;
 	UBTComposite_Sequence* PatrolSequence;
 	UBTComposite_Sequence* PatrolPointTaskSequence;
-	UDetectPlayerService* DetectService;
-	UFindPatrolPointTask* PatrolPointTask;
-	UBTTask_MoveTo* MoveToTask;
-	UChasePlayerTask* ChasePlayerTask;
+	UFindPatrolPointTask* FindPatrolPointTask;
+	UMoveToPatrolPointTask* MoveToPatrolPointTask;
 	UIsPlayerVisibleDecorator* IsPlayerVisibleDecorator;
 	//patrol points
 	UPROPERTY(EditAnywhere, Category = "AI")

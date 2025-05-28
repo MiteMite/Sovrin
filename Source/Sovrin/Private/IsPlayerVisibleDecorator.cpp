@@ -15,10 +15,6 @@ bool UIsPlayerVisibleDecorator::CalculateRawConditionValue(UBehaviorTreeComponen
 	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
 	if (!BlackboardComponent)
 		return false;
-
-	if (BlackboardComponent)
-	{
-		return false;
-	}
-	return true;
+	
+	return BlackboardComponent->GetValueAsBool("IsPlayerVisible");
 }

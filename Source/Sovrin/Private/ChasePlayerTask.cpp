@@ -38,12 +38,12 @@ EBTNodeResult::Type UChasePlayerTask::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	AIController = OwnerComp.GetAIOwner();
 	if (BlackboardComponent->GetValueAsBool("IsPlayerVisible"))
 	{
-		OnTaskFinished(OwnerComp, NodeMemory, EBTNodeResult::Succeeded);
-		return EBTNodeResult::Succeeded;
+		AIController->MoveToLocation(PlayerLocation);
+		return EBTNodeResult::Failed;
 	}
 	else
 	{
-		return EBTNodeResult::Failed;
+		return EBTNodeResult::Succeeded;
 	}
 	
 }
@@ -51,11 +51,12 @@ EBTNodeResult::Type UChasePlayerTask::ExecuteTask(UBehaviorTreeComponent& OwnerC
 void UChasePlayerTask::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult)
 {
 	Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);
-	
+
 	UE_LOG(LogTemp, Warning, TEXT("Chase Player Task Finished"));
-	
-	AAIController* AIController = OwnerComp.GetAIOwner();
+	/*AAIController* AIController = OwnerComp.GetAIOwner();
 	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
+	FVector PlayerLocation = BlackboardComponent->GetValueAsVector("PlayerLocation");
+
 	if (!AIController)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Failed to load Ai controller"));
@@ -66,15 +67,18 @@ void UChasePlayerTask::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* 
 		UE_LOG(LogTemp, Warning, TEXT("Failed to load blackboard component"));
 		return;
 	}
+	if (TaskResult==EBTNodeResult::InProgress)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Moving to player location %s"),*PlayerLocation.ToString());
+		
+	}
 	
 	if (TaskResult == EBTNodeResult::Succeeded)
 	{
-		FVector PlayerLocation = BlackboardComponent->GetValueAsVector("PlayerLocation");
-		UE_LOG(LogTemp, Warning, TEXT("Moving to player location %s"),*PlayerLocation.ToString());
-		AIController->MoveToLocation(PlayerLocation);
+		
 	}
 	if (TaskResult != EBTNodeResult::Succeeded)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to chase player"));
-	}
+		//UE_LOG(LogTemp, Warning, TEXT("Failed to chase player"));
+	}*/
 }

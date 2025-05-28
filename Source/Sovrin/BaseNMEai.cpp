@@ -52,17 +52,11 @@ ABaseNMEai::ABaseNMEai()
 	 *
 	 ******************************************************************************************************************/
 	if (BehaviorTree && BehaviorTreeComponent)
-	{
 		// Root sequence setup
 	    RootSequence = NewObject<UBTComposite_Sequence>(BehaviorTreeComponent);
 		RootSequence->NodeName = "Root";
 		RootSequence->SetOwner(this->GetOwner());
 	    BehaviorTree->RootNode = RootSequence;
-
-	    // DetectPlayerService is added as a service to the RootSequence
-	    DetectService = NewObject<UDetectPlayerService>(RootSequence);
-	    DetectService->SetOwner(this->GetOwner());
-	    RootSequence->Services.Add(DetectService);
 		
 	    // Main selector to differentiate between chase and patrol
 	    MainSelector = NewObject<UBTComposite_Selector>(RootSequence);
@@ -72,20 +66,32 @@ ABaseNMEai::ABaseNMEai()
 	    MainSelectorChild.ChildComposite = MainSelector;
 	    RootSequence->Children.Add(MainSelectorChild);
 		
-		// *** PATROL SEQUENCE ***
+		// *** PATROL SELECTOR ***
+
+		//Patrol Sequence
 		PatrolSequence = NewObject<UBTComposite_Sequence>(MainSelector);
 		PatrolSequence->NodeName = "PatrolSequence";
 		FBTCompositeChild PatrolSequenceChild;
 		PatrolSequenceChild.ChildComposite = PatrolSequence;
+		MainSelector->Children.Add(PatrolSequenceChild);
 		
-		// Patrol Task (e.g., finding and moving to patrol points)
-		PatrolPointTask = NewObject<UFindPatrolPointTask>(PatrolSequence);
-		PatrolPointTask->NodeName = "PatrolPointTask";
-		PatrolPointTask->SetOwner(this->GetOwner());
-		PatrolPointTask->GetTargetLocationKey().SelectedKeyName = PatrolPointLocation.EntryName; // PatrolPointLocation Blackboard Key
-		FBTCompositeChild PatrolTaskChild;
-		PatrolTaskChild.ChildTask = PatrolPointTask;
-		PatrolSequence->Children.Add(PatrolTaskChild);
+		// Patrol Task (e.g., finding patrol points)
+		FindPatrolPointTask = NewObject<UFindPatrolPointTask>(PatrolSequence);
+		FindPatrolPointTask->NodeName = "FindPatrolPointTask";
+		FindPatrolPointTask->SetOwner(this->GetOwner());
+		FindPatrolPointTask->GetTargetLocationKey().SelectedKeyName = PatrolPointLocation.EntryName; // PatrolPointLocation Blackboard Key
+		FBTCompositeChild FindPatrolTaskChild;
+		FindPatrolTaskChild.ChildTask = FindPatrolPointTask;
+		PatrolSequence->Children.Add(FindPatrolTaskChild);
+
+		// MoveToPatrolPointTask after finding patrol points
+		MoveToPatrolPointTask = NewObject<UMoveToPatrolPointTask>(PatrolSequence);
+		MoveToPatrolPointTask->NodeName = "MoveToPatrolPointTask";
+		MoveToPatrolPointTask->SetOwner(this->GetOwner());
+		MoveToPatrolPointTask->GetTargetLocationKey().SelectedKeyName = PatrolPointLocation.EntryName; // PatrolPointLocation Blackboard Key
+		FBTCompositeChild MoveToPatrolPointTaskChild;
+		MoveToPatrolPointTaskChild.ChildTask = MoveToPatrolPointTask;
+		PatrolSequence->Children.Add(MoveToPatrolPointTaskChild);
 		
 		// *** CHASE SEQUENCE ***
 		ChaseSequence = NewObject<UBTComposite_Sequence>(MainSelector);
@@ -102,21 +108,27 @@ ABaseNMEai::ABaseNMEai()
 		FBTCompositeChild ChasePlayerTaskChild;
 		ChasePlayerTaskChild.ChildTask = ChasePlayerTask;
 		ChaseSequence->Children.Add(ChasePlayerTaskChild);
+
+		// *** Decorators and Services ***
 		
 		// Blackboard decorator to check if player is visible
-		IsPlayerVisibleDecorator = NewObject<UIsPlayerVisibleDecorator>(MainSelector);
+		IsPlayerVisibleDecorator = NewObject<UIsPlayerVisibleDecorator>(PatrolSequence);
 		IsPlayerVisibleDecorator->NodeName = "IsPlayerVisible";
 		IsPlayerVisibleDecorator->SetOwner(this->GetOwner());
 		IsPlayerVisibleDecorator->IsPlayerVisibleKey.SelectedKeyName = IsPlayerVisible.EntryName; // key to check
-		MainSelectorChild.Decorators.Add(IsPlayerVisibleDecorator);
-		
-	}
+		ChasePlayerTaskChild.Decorators.Add(IsPlayerVisibleDecorator);
+	
+		// DetectPlayerService is added as a service to the RootSequence
+		DetectService = NewObject<UDetectPlayerService>(RootSequence);
+		DetectService->NodeName = "DetectPlayerService";
+		DetectService->SetOwner(this->GetOwner());
+		RootSequence->Services.Add(DetectService);
+}
 	/*******************************************************************************************************************
 	*
 	*End Setup of node sequencer 
 	*
 	*******************************************************************************************************************/
-}
 	
 void ABaseNMEai::BeginPlay()
 {
