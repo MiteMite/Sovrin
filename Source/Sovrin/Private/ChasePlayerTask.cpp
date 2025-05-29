@@ -5,6 +5,7 @@
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
 #include "Sovrin/BaseNMEai.h"
+#include "Navigation/PathFollowingComponent.h"
 
 UChasePlayerTask::UChasePlayerTask()
 {
@@ -16,9 +17,8 @@ UChasePlayerTask::UChasePlayerTask()
 
 EBTNodeResult::Type UChasePlayerTask::ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory)
 {
-	//UE_LOG(LogTemp, Warning, TEXT("Executing chase player task"));
-	AAIController* AIController = OwnerComp.GetAIOwner();
-	if (!AIController)
+	CachedAIController = OwnerComp.GetAIOwner();
+	if (!CachedAIController)
 	{
 		return EBTNodeResult::Failed;
 	}
@@ -30,55 +30,45 @@ EBTNodeResult::Type UChasePlayerTask::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	}
 
 	FVector PlayerLocation = BlackboardComponent->GetValueAsVector("PlayerLocation");
-	if (PlayerLocation.IsZero())
+
+	//Start the movement
+	EPathFollowingRequestResult::Type MoveResult = CachedAIController->MoveToLocation(PlayerLocation);
+
+	if (MoveResult == EPathFollowingRequestResult::RequestSuccessful)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("No Player location is found"));
-		return EBTNodeResult::Failed;
-	}
-	AIController = OwnerComp.GetAIOwner();
-	if (BlackboardComponent->GetValueAsBool("IsPlayerVisible"))
-	{
-		AIController->MoveToLocation(PlayerLocation);
-		return EBTNodeResult::Failed;
+		UE_LOG(LogTemp, Warning, TEXT("Chase Player Task - Movement Started"));
+		return EBTNodeResult::InProgress;
 	}
 	else
 	{
-		return EBTNodeResult::Succeeded;
+		UE_LOG(LogTemp, Warning, TEXT("Chase Player Task - Movement Failed"));
+		return EBTNodeResult::Failed;
 	}
-	
 }
+
+void UChasePlayerTask::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
+{
+	Super::TickTask(OwnerComp, NodeMemory, DeltaSeconds);
+	if (CachedAIController)
+	{
+		UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
+		if (BlackboardComponent)
+		{
+			FVector NewPlayerLocation = BlackboardComponent->GetValueAsVector("PlayerLocation");
+			CachedAIController->MoveToLocation(NewPlayerLocation);
+		}
+
+	}
+}
+
 
 void UChasePlayerTask::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult)
 {
+	if (CachedAIController)
+	{
+		CachedAIController->StopMovement();
+		UE_LOG(LogTemp, Warning, TEXT("Chase Player Task - Movement Stopped"));
+	}
+	CachedAIController = nullptr;
 	Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);
-
-	UE_LOG(LogTemp, Warning, TEXT("Chase Player Task Finished"));
-	/*AAIController* AIController = OwnerComp.GetAIOwner();
-	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
-	FVector PlayerLocation = BlackboardComponent->GetValueAsVector("PlayerLocation");
-
-	if (!AIController)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to load Ai controller"));
-		return;
-	}
-	if (!BlackboardComponent)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to load blackboard component"));
-		return;
-	}
-	if (TaskResult==EBTNodeResult::InProgress)
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Moving to player location %s"),*PlayerLocation.ToString());
-		
-	}
-	
-	if (TaskResult == EBTNodeResult::Succeeded)
-	{
-		
-	}
-	if (TaskResult != EBTNodeResult::Succeeded)
-	{
-		//UE_LOG(LogTemp, Warning, TEXT("Failed to chase player"));
-	}*/
 }

@@ -19,45 +19,44 @@ UDetectPlayerService::UDetectPlayerService()
 void UDetectPlayerService::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	Super::TickNode(OwnerComp, NodeMemory, DeltaSeconds);
-	
+    
 	AIController = OwnerComp.GetAIOwner();
-	
-	if (!AIController)
+    
+	if (!AIController || !AIController->GetBlackboardComponent() || !AIController->GetPerceptionComponent())
 	{
-		UE_LOG(LogTemp, Warning, TEXT("AI Controller is null"));
 		return;
 	}
-	
-	if (AIController->GetBlackboardComponent() && AIController->GetPerceptionComponent())
+    
+	TArray<AActor*> DetectedActors;
+	AIController->GetPerceptionComponent()->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), DetectedActors);
+
+	bool bPreviousVisibility = bIsPlayerVisible;
+	bIsPlayerVisible = false;
+	FVector PlayerLocation = FVector::ZeroVector;
+    
+	// Check if player is detected
+	for (AActor* Actor : DetectedActors)
 	{
-		TArray<AActor*> DetectedActors;
-		AIController->GetPerceptionComponent()->GetCurrentlyPerceivedActors(UAISense_Sight::StaticClass(), DetectedActors);
-		if (DetectedActors.Num() > 0)
+		if (Actor && Actor->IsA(ASaoirse::StaticClass()))
 		{
-			for (AActor* Actor : DetectedActors)
-			{
-				if (Actor->IsA(ASaoirse::StaticClass()))
-				{
-					bIsPlayerVisible = true;
-					AIController->GetBlackboardComponent()->SetValueAsBool("IsPlayerVisible", bIsPlayerVisible);
-					AIController->GetBlackboardComponent()->SetValueAsVector("PlayerLocation", Actor->GetActorLocation());
-				}
-				else
-				{
-					bIsPlayerVisible = false;
-					AIController->GetBlackboardComponent()->SetValueAsBool("IsPlayerVisible", bIsPlayerVisible);
-				}
-			}
-		}
-		else
-		{
-			bIsPlayerVisible = false;
-			AIController->GetBlackboardComponent()->SetValueAsBool("IsPlayerVisible", bIsPlayerVisible);
+			bIsPlayerVisible = true;
+			PlayerLocation = Actor->GetActorLocation();
+			break;
 		}
 	}
-	else
+    
+	// Always update blackboard
+	AIController->GetBlackboardComponent()->SetValueAsBool("IsPlayerVisible", bIsPlayerVisible);
+    
+	if (bIsPlayerVisible)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Blackboard or Perception component is null"));
+		AIController->GetBlackboardComponent()->SetValueAsVector("PlayerLocation", PlayerLocation);
 	}
-	//UE_LOG(LogTemp, Warning, TEXT("IsPlayerVisible: %d"), AIController->GetBlackboardComponent()->GetValueAsBool("IsPlayerVisible"));
+    
+	// Debug log
+	if (bPreviousVisibility != bIsPlayerVisible)
+	{
+		/*UE_LOG(LogTemp, Warning, TEXT("Player visibility changed to: %s"), 
+			   bIsPlayerVisible ? TEXT("VISIBLE") : TEXT("NOT VISIBLE"));*/
+	}
 }

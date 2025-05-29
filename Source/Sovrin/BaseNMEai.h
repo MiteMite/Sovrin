@@ -9,12 +9,14 @@
 #include "BehaviorTree/Decorators/BTDecorator_Blackboard.h"
 #include "BehaviorTree/BTDecorator.h"
 #include "IsPlayerVisibleDecorator.h"
+#include "IsPlayerNOTVisibleDecorator.h"
 #include "BehaviorTree/Composites/BTComposite_SimpleParallel.h"
 #include "BehaviorTree/Tasks/BTTask_MoveTo.h"
 #include "BehaviorTree/Tasks/BTTask_Wait.h"
 #include "DetectPlayerService.h"
 #include "FindPatrolPointTask.h"
 #include "MoveToPatrolPointTask.h"
+#include "BehaviorTree/Tasks/BTTask_Wait.h"
 #include "IsPlayerVisibleDecorator.h"
 #include "AITask_MoveTo.generated.h"
 #include "BehaviorTree/BlackboardData.h"
@@ -58,6 +60,8 @@ private:
 	UBlackboardKeyType_Vector* PatrolPointLocationKeyType = NewObject<UBlackboardKeyType_Vector>();
 	FBlackboardEntry IsPlayerVisible = *new FBlackboardEntry();
 	UBlackboardKeyType_Bool* IsPlayerVisibleKeyType = NewObject<UBlackboardKeyType_Bool>();
+	FBlackboardEntry IsPlayerNOTVisible = *new FBlackboardEntry();
+	UBlackboardKeyType_Bool* IsPlayerNOTVisibleKeyType = NewObject<UBlackboardKeyType_Bool>();
 	//Behavior tree nodes services and tasks
 	UBTComposite_Sequence* RootSequence;
 	UDetectPlayerService* DetectService;
@@ -69,6 +73,8 @@ private:
 	UFindPatrolPointTask* FindPatrolPointTask;
 	UMoveToPatrolPointTask* MoveToPatrolPointTask;
 	UIsPlayerVisibleDecorator* IsPlayerVisibleDecorator;
+	UIsPlayerNOTVisibleDecorator* IsPlayerNOTVisibleDecorator;
+	UBTTask_Wait* WaitTask;
 	//patrol points
 	UPROPERTY(EditAnywhere, Category = "AI")
 	TArray<AActor*> ControllerPatrolPoints;

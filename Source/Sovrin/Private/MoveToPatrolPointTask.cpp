@@ -15,33 +15,23 @@ EBTNodeResult::Type UMoveToPatrolPointTask::ExecuteTask(UBehaviorTreeComponent& 
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	UBlackboardComponent* BlackboardComponent = AIController->GetBlackboardComponent();
 	PatrolPointLocation = BlackboardComponent->GetValueAsVector("PatrolPointLocation");
-
-	if (OwnerComp.GetOwner()->GetActorLocation()!=PatrolPointLocation)
-	{
-		AIController->MoveToLocation(PatrolPointLocation);
-		return EBTNodeResult::Failed;
-	}
-	else
-	{
-		return EBTNodeResult::Succeeded;
-	}
-
+	UE_LOG(LogTemp, Warning, TEXT("Executing move to patrol point task with location: %s"), *PatrolPointLocation.ToString());
+	AIController->MoveToLocation(PatrolPointLocation);
+	OnTaskFinished(OwnerComp, NodeMemory, EBTNodeResult::Succeeded);
+	return EBTNodeResult::Succeeded;
 }
+
 void UMoveToPatrolPointTask::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult)
 {
 	Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);
 	
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	UBlackboardComponent* BlackboardComponent = AIController->GetBlackboardComponent();
-	PatrolPointLocation = BlackboardComponent->GetValueAsVector("PatrolPointLocation");
-	if (AIController->GetOwner()->GetActorLocation() == PatrolPointLocation)
+	ABaseNMEai* NMEAI = Cast<ABaseNMEai>(AIController);
+	if (NMEAI)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Patrol point reached"));
-		if (ABaseNMEai* ParentBaseNME = Cast<ABaseNMEai>(OwnerComp.GetOwner()))
-		{
-			UE_LOG(LogTemp, Warning, TEXT("Getting next patrol point"))
-			ParentBaseNME->GetNextPatrolPoint();
-			AIController->GetBlackboardComponent()->SetValueAsVector("PatrolPointLocation", ParentBaseNME->GetCurrentPatrolPoint()->GetActorLocation());
-		}
+		FVector NewLocation = NMEAI->GetNextPatrolPoint()->GetActorLocation();
+		//UE_LOG(LogTemp, Warning, TEXT("Next patrol point %s"), *NewLocation.ToString());
+		BlackboardComponent->SetValueAsVector("PatrolPointLocation", NewLocation);
 	}
 }

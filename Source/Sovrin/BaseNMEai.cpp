@@ -39,6 +39,9 @@ ABaseNMEai::ABaseNMEai()
 	IsPlayerVisible.EntryName = FName("IsPlayerVisible");
 	IsPlayerVisible.KeyType = IsPlayerVisibleKeyType;
 	BlackboardData->Keys.Add(IsPlayerVisible);
+	IsPlayerNOTVisible.EntryName = FName("IsPlayerNOTVisible");
+	IsPlayerNOTVisible.KeyType = IsPlayerNOTVisibleKeyType;
+	BlackboardData->Keys.Add(IsPlayerNOTVisible);
 	
 	//Set current patrol point index to 0
 	CurrentPatrolPointIndexINT32 = 0;
@@ -65,10 +68,24 @@ ABaseNMEai::ABaseNMEai()
 	    FBTCompositeChild MainSelectorChild;
 	    MainSelectorChild.ChildComposite = MainSelector;
 	    RootSequence->Children.Add(MainSelectorChild);
-		
-		// *** PATROL SELECTOR ***
 
-		//Patrol Sequence
+		// *** CHASE SEQUENCE ***
+		ChaseSequence = NewObject<UBTComposite_Sequence>(MainSelector);
+		ChaseSequence->NodeName = "ChaseSequence";
+		FBTCompositeChild ChaseSequenceChild;
+		ChaseSequenceChild.ChildComposite = ChaseSequence;
+		MainSelector->Children.Add(ChaseSequenceChild);
+					
+		// Chase Player Task inside ChaseSequence
+		ChasePlayerTask = NewObject<UChasePlayerTask>(ChaseSequence);
+		ChasePlayerTask->NodeName = "ChasePlayerTask";
+		ChasePlayerTask->SetOwner(this->GetOwner());
+		ChasePlayerTask->PlayerLocationKey.SelectedKeyName = PlayerLocation.EntryName; // PlayerLocation Blackboard Key
+		FBTCompositeChild ChasePlayerTaskChild;
+		ChasePlayerTaskChild.ChildTask = ChasePlayerTask;
+		ChaseSequence->Children.Add(ChasePlayerTaskChild);
+		
+		// *** PATROL SEQUENCE ***
 		PatrolSequence = NewObject<UBTComposite_Sequence>(MainSelector);
 		PatrolSequence->NodeName = "PatrolSequence";
 		FBTCompositeChild PatrolSequenceChild;
@@ -92,31 +109,27 @@ ABaseNMEai::ABaseNMEai()
 		FBTCompositeChild MoveToPatrolPointTaskChild;
 		MoveToPatrolPointTaskChild.ChildTask = MoveToPatrolPointTask;
 		PatrolSequence->Children.Add(MoveToPatrolPointTaskChild);
-		
-		// *** CHASE SEQUENCE ***
-		ChaseSequence = NewObject<UBTComposite_Sequence>(MainSelector);
-		ChaseSequence->NodeName = "ChaseSequence";
-		FBTCompositeChild ChaseSequenceChild;
-		ChaseSequenceChild.ChildComposite = ChaseSequence;
-		MainSelector->Children.Add(ChaseSequenceChild);
-		
-		// Chase Player Task inside ChaseSequence
-		ChasePlayerTask = NewObject<UChasePlayerTask>(ChaseSequence);
-		ChasePlayerTask->NodeName = "ChasePlayerTask";
-		ChasePlayerTask->SetOwner(this->GetOwner());
-		ChasePlayerTask->PlayerLocationKey.SelectedKeyName = PlayerLocation.EntryName; // PlayerLocation Blackboard Key
-		FBTCompositeChild ChasePlayerTaskChild;
-		ChasePlayerTaskChild.ChildTask = ChasePlayerTask;
-		ChaseSequence->Children.Add(ChasePlayerTaskChild);
 
+		// WaitTask after moving to patrol point
+		WaitTask = NewObject<UBTTask_Wait>(PatrolSequence);
+		WaitTask->NodeName = "WaitTask";
+		WaitTask->SetOwner(this->GetOwner());
+		WaitTask->WaitTime = 10.0f;
+		FBTCompositeChild WaitTaskChild;
+		WaitTaskChild.ChildTask = WaitTask;
+		PatrolSequence->Children.Add(WaitTaskChild);
+	
 		// *** Decorators and Services ***
-		
-		// Blackboard decorator to check if player is visible
-		IsPlayerVisibleDecorator = NewObject<UIsPlayerVisibleDecorator>(PatrolSequence);
+
+		IsPlayerVisibleDecorator = NewObject<UIsPlayerVisibleDecorator>(ChaseSequence);
 		IsPlayerVisibleDecorator->NodeName = "IsPlayerVisible";
 		IsPlayerVisibleDecorator->SetOwner(this->GetOwner());
-		IsPlayerVisibleDecorator->IsPlayerVisibleKey.SelectedKeyName = IsPlayerVisible.EntryName; // key to check
-		ChasePlayerTaskChild.Decorators.Add(IsPlayerVisibleDecorator);
+		ChaseSequenceChild.Decorators.Add(IsPlayerVisibleDecorator);
+	
+		/*IsPlayerNOTVisibleDecorator = NewObject<UIsPlayerNOTVisibleDecorator>(PatrolSequence);
+		IsPlayerNOTVisibleDecorator->NodeName = "IsPlayerNOTVisible";
+		IsPlayerNOTVisibleDecorator->SetOwner(this->GetOwner());
+		PatrolSequenceChild.Decorators.Add(IsPlayerNOTVisibleDecorator);*/
 	
 		// DetectPlayerService is added as a service to the RootSequence
 		DetectService = NewObject<UDetectPlayerService>(RootSequence);
@@ -150,7 +163,7 @@ void ABaseNMEai::BeginPlay()
 	{
 		SetControllerPatrolPoints(ParentBaseNME->PatrolPoints);
 		BlackboardComponent->SetValueAsVector("PatrolPointLocation", GetCurrentPatrolPoint()->GetActorLocation());
-		UE_LOG(LogTemp, Warning, TEXT("Patrol Points number: %d"), ControllerPatrolPoints.Num());
+		//UE_LOG(LogTemp, Warning, TEXT("Patrol Points number: %d"), ControllerPatrolPoints.Num());
 		GetNextPatrolPoint();
 	}
 	else
@@ -204,8 +217,13 @@ void ABaseNMEai::LogBlackboardKeys()
 void ABaseNMEai::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
-	
-	//LogActiveBehaviorTreeNode();
+	/*if (BlackboardComponent)
+	{
+		bool bPlayerVisible = BlackboardComponent->GetValueAsBool("IsPlayerVisible");
+		UE_LOG(LogTemp, Warning, TEXT("Current State - PlayerVisible: %s"), 
+			   bPlayerVisible ? TEXT("TRUE") : TEXT("FALSE"));
+	}*/
+	LogActiveBehaviorTreeNode();
 	//LogBlackboardKeys();
 }
 
@@ -224,7 +242,13 @@ AActor* ABaseNMEai::GetNextPatrolPoint()
 {
 	if (ControllerPatrolPoints.Num()>0)
 	{
-		CurrentPatrolPointIndexINT32 = (CurrentPatrolPointIndexINT32 + 1) % ControllerPatrolPoints.Num();//increment patrol point index
+		for (AActor* Actor : ControllerPatrolPoints)
+		{
+			UE_LOG(LogTemp, Warning, TEXT("Patrol Point Location: %s"), *Actor->GetActorLocation().ToString());
+		}
+		CurrentPatrolPointIndexINT32++;
+		CurrentPatrolPointIndexINT32 = CurrentPatrolPointIndexINT32 % ControllerPatrolPoints.Num();//increment patrol point index
+		UE_LOG(LogTemp, Warning, TEXT("Current Patrol Point Index: %d"), CurrentPatrolPointIndexINT32);
 		return ControllerPatrolPoints[CurrentPatrolPointIndexINT32];
 	}
 	else

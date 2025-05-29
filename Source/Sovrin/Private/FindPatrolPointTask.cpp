@@ -16,7 +16,6 @@ EBTNodeResult::Type UFindPatrolPointTask::ExecuteTask(UBehaviorTreeComponent& Ow
 {
 	AAIController* AIController = OwnerComp.GetAIOwner();
 	UBlackboardComponent* BlackboardComponent = AIController->GetBlackboardComponent();
-	//UE_LOG(LogTemp, Warning, TEXT("Executing find patrol point task"));
 	if (!AIController && !BlackboardComponent )
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Failed to load Ai controller and blackboard component"));
@@ -24,10 +23,13 @@ EBTNodeResult::Type UFindPatrolPointTask::ExecuteTask(UBehaviorTreeComponent& Ow
 	}
 	else
 	{
-		if (OwnerComp.GetOwner()->IsA(ABaseNMEai::StaticClass()))
+		if (AIController->IsA(ABaseNMEai::StaticClass()))
 		{
+			AIController->GetBlackboardComponent()->SetValueAsVector("PatrolPointLocation", Cast<ABaseNMEai>(AIController)->GetCurrentPatrolPoint()->GetActorLocation());
 			FVector NewLocation = AIController->GetBlackboardComponent()->GetValueAsVector("PatrolPointLocation");
 			BlackboardComponent->SetValueAsVector("PatrolPointLocation", NewLocation);
+			UE_LOG(LogTemp, Warning, TEXT("Patrol Point Location: %s"), *NewLocation.ToString());
+			//OnTaskFinished(OwnerComp, NodeMemory, EBTNodeResult::Succeeded);
 			return EBTNodeResult::Succeeded;
 		}
 		else
@@ -41,20 +43,7 @@ EBTNodeResult::Type UFindPatrolPointTask::ExecuteTask(UBehaviorTreeComponent& Ow
 
 void UFindPatrolPointTask::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult)
 {
-	Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);
 
 	UE_LOG(LogTemp, Warning, TEXT("Find Patrol Point Task Finished"));
-	AAIController* AIController = OwnerComp.GetAIOwner();
-	UBlackboardComponent* BlackboardComponent = AIController->GetBlackboardComponent();
-	FVector NewLocation = AIController->GetBlackboardComponent()->GetValueAsVector("PatrolPointLocation");
-	BlackboardComponent->SetValueAsVector("PatrolPointLocation", NewLocation);
-	if (ABaseNMEai* ParentBaseNME = Cast<ABaseNMEai>(OwnerComp.GetOwner()))
-	{
-		ParentBaseNME->GetNextPatrolPoint();
-		AIController->GetBlackboardComponent()->SetValueAsVector("PatrolPointLocation", ParentBaseNME->GetCurrentPatrolPoint()->GetActorLocation());
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("Parent Base NME is null"));
-	}
+
 }
