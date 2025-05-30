@@ -13,6 +13,7 @@
 #include "BehaviorTree/Composites/BTComposite_SimpleParallel.h"
 #include "BehaviorTree/Tasks/BTTask_MoveTo.h"
 #include "BehaviorTree/Tasks/BTTask_Wait.h"
+#include "AbortableWaitTask.h"
 #include "DetectPlayerService.h"
 #include "FindPatrolPointTask.h"
 #include "MoveToPatrolPointTask.h"
@@ -74,7 +75,7 @@ private:
 	UMoveToPatrolPointTask* MoveToPatrolPointTask;
 	UIsPlayerVisibleDecorator* IsPlayerVisibleDecorator;
 	UIsPlayerNOTVisibleDecorator* IsPlayerNOTVisibleDecorator;
-	UBTTask_Wait* WaitTask;
+	UAbortableWaitTask* WaitTask;
 	//patrol points
 	UPROPERTY(EditAnywhere, Category = "AI")
 	TArray<AActor*> ControllerPatrolPoints;

@@ -111,10 +111,9 @@ ABaseNMEai::ABaseNMEai()
 		PatrolSequence->Children.Add(MoveToPatrolPointTaskChild);
 
 		// WaitTask after moving to patrol point
-		WaitTask = NewObject<UBTTask_Wait>(PatrolSequence);
+		WaitTask = NewObject<UAbortableWaitTask>(PatrolSequence);
 		WaitTask->NodeName = "WaitTask";
 		WaitTask->SetOwner(this->GetOwner());
-		WaitTask->WaitTime = 3.0f;
 		FBTCompositeChild WaitTaskChild;
 		WaitTaskChild.ChildTask = WaitTask;
 		PatrolSequence->Children.Add(WaitTaskChild);

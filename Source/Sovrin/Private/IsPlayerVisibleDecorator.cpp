@@ -10,11 +10,13 @@ UIsPlayerVisibleDecorator::UIsPlayerVisibleDecorator()
 {
 	NodeName = TEXT("Is Player Visible");
 	bAllowAbortChildNodes = true;
-	FlowAbortMode = EBTFlowAbortMode::Self;
+	FlowAbortMode = EBTFlowAbortMode::LowerPriority; //Abort patrol when player is visible
 	BlackboardKey.SelectedKeyName = TEXT("IsPlayerVisible");
 	BlackboardKey.SelectedKeyType = UBlackboardKeyType_Bool::StaticClass();
 	IsPlayerVisibleKey = BlackboardKey;
-	NotifyObserver = EBTBlackboardRestart::ValueChange;
+	NotifyObserver = EBTBlackboardRestart::ValueChange; //react to blackboard changes
+	bNotifyBecomeRelevant = true; //notify when blackboard key becomes relevant
+	bNotifyCeaseRelevant = true; //notify when blackboard key becomes irrelevant
 }
 
 bool UIsPlayerVisibleDecorator::CalculateRawConditionValue(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) const
