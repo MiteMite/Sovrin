@@ -114,7 +114,7 @@ ABaseNMEai::ABaseNMEai()
 		WaitTask = NewObject<UBTTask_Wait>(PatrolSequence);
 		WaitTask->NodeName = "WaitTask";
 		WaitTask->SetOwner(this->GetOwner());
-		WaitTask->WaitTime = 10.0f;
+		WaitTask->WaitTime = 3.0f;
 		FBTCompositeChild WaitTaskChild;
 		WaitTaskChild.ChildTask = WaitTask;
 		PatrolSequence->Children.Add(WaitTaskChild);
@@ -163,8 +163,6 @@ void ABaseNMEai::BeginPlay()
 	{
 		SetControllerPatrolPoints(ParentBaseNME->PatrolPoints);
 		BlackboardComponent->SetValueAsVector("PatrolPointLocation", GetCurrentPatrolPoint()->GetActorLocation());
-		//UE_LOG(LogTemp, Warning, TEXT("Patrol Points number: %d"), ControllerPatrolPoints.Num());
-		GetNextPatrolPoint();
 	}
 	else
 	{
@@ -244,11 +242,11 @@ AActor* ABaseNMEai::GetNextPatrolPoint()
 	{
 		for (AActor* Actor : ControllerPatrolPoints)
 		{
-			UE_LOG(LogTemp, Warning, TEXT("Patrol Point Location: %s"), *Actor->GetActorLocation().ToString());
+			//UE_LOG(LogTemp, Warning, TEXT("Patrol Point Location: %s"), *Actor->GetActorLocation().ToString());
 		}
 		CurrentPatrolPointIndexINT32++;
 		CurrentPatrolPointIndexINT32 = CurrentPatrolPointIndexINT32 % ControllerPatrolPoints.Num();//increment patrol point index
-		UE_LOG(LogTemp, Warning, TEXT("Current Patrol Point Index: %d"), CurrentPatrolPointIndexINT32);
+		//UE_LOG(LogTemp, Warning, TEXT("Current Patrol Point Index: %d"), CurrentPatrolPointIndexINT32);
 		return ControllerPatrolPoints[CurrentPatrolPointIndexINT32];
 	}
 	else

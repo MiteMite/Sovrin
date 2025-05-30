@@ -28,8 +28,7 @@ EBTNodeResult::Type UFindPatrolPointTask::ExecuteTask(UBehaviorTreeComponent& Ow
 			AIController->GetBlackboardComponent()->SetValueAsVector("PatrolPointLocation", Cast<ABaseNMEai>(AIController)->GetCurrentPatrolPoint()->GetActorLocation());
 			FVector NewLocation = AIController->GetBlackboardComponent()->GetValueAsVector("PatrolPointLocation");
 			BlackboardComponent->SetValueAsVector("PatrolPointLocation", NewLocation);
-			UE_LOG(LogTemp, Warning, TEXT("Patrol Point Location: %s"), *NewLocation.ToString());
-			//OnTaskFinished(OwnerComp, NodeMemory, EBTNodeResult::Succeeded);
+			//UE_LOG(LogTemp, Warning, TEXT("Patrol Point Location: %s"), *NewLocation.ToString());
 			return EBTNodeResult::Succeeded;
 		}
 		else
@@ -37,13 +36,4 @@ EBTNodeResult::Type UFindPatrolPointTask::ExecuteTask(UBehaviorTreeComponent& Ow
 			return EBTNodeResult::Failed;
 		}
 	}
-}
-
-
-
-void UFindPatrolPointTask::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult)
-{
-
-	UE_LOG(LogTemp, Warning, TEXT("Find Patrol Point Task Finished"));
-
 }

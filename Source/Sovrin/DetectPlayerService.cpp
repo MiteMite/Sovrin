@@ -56,7 +56,7 @@ void UDetectPlayerService::TickNode(UBehaviorTreeComponent& OwnerComp, uint8* No
 	// Debug log
 	if (bPreviousVisibility != bIsPlayerVisible)
 	{
-		/*UE_LOG(LogTemp, Warning, TEXT("Player visibility changed to: %s"), 
-			   bIsPlayerVisible ? TEXT("VISIBLE") : TEXT("NOT VISIBLE"));*/
+		UE_LOG(LogTemp, Warning, TEXT("Player visibility changed to: %s"), 
+			   bIsPlayerVisible ? TEXT("VISIBLE") : TEXT("NOT VISIBLE"));
 	}
 }

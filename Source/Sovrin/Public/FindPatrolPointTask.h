@@ -17,7 +17,6 @@ class SOVRIN_API UFindPatrolPointTask : public UBTTaskNode
 public:
 	UFindPatrolPointTask();
 	virtual EBTNodeResult::Type ExecuteTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory) override;
-	virtual void OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult) override;
 	FBlackboardKeySelector GetTargetLocationKey() const { return TargetLocationKey; }
 private:
 	UPROPERTY(EditAnywhere, Category = "Blackboard")

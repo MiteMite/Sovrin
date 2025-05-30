@@ -10,7 +10,8 @@
 UChasePlayerTask::UChasePlayerTask()
 {
 	NodeName = "Chase Player";
-
+	bNotifyTick = true;
+	bNotifyTaskFinished = true;
 	PlayerLocationKey.AddVectorFilter(this, GET_MEMBER_NAME_CHECKED(UChasePlayerTask, PlayerLocationKey));
 	
 }
@@ -49,15 +50,18 @@ EBTNodeResult::Type UChasePlayerTask::ExecuteTask(UBehaviorTreeComponent& OwnerC
 void UChasePlayerTask::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds)
 {
 	Super::TickTask(OwnerComp, NodeMemory, DeltaSeconds);
+	
 	if (CachedAIController)
 	{
-		UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
-		if (BlackboardComponent)
+		UPathFollowingComponent* PathFollowingComponent = CachedAIController->GetPathFollowingComponent();
+		if (PathFollowingComponent && PathFollowingComponent->GetStatus() == EPathFollowingStatus::Moving)
 		{
-			FVector NewPlayerLocation = BlackboardComponent->GetValueAsVector("PlayerLocation");
-			CachedAIController->MoveToLocation(NewPlayerLocation);
+			FinishLatentTask(OwnerComp, EBTNodeResult::Succeeded);
 		}
-
+		else
+		{
+			FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
+		}
 	}
 }
 
@@ -66,8 +70,11 @@ void UChasePlayerTask::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* 
 {
 	if (CachedAIController)
 	{
-		CachedAIController->StopMovement();
-		UE_LOG(LogTemp, Warning, TEXT("Chase Player Task - Movement Stopped"));
+		if (CachedAIController->GetBlackboardComponent()->GetValueAsBool("IsPlayerVisible")==false)
+		{
+			CachedAIController->StopMovement();
+			UE_LOG(LogTemp, Warning, TEXT("Chase Player Task - Movement Stopped"));
+		}
 	}
 	CachedAIController = nullptr;
 	Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);
