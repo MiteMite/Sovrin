@@ -21,8 +21,10 @@ protected:
 	virtual void TickNode(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, float DeltaSeconds) override;
 
 private:
-	void CheckPlayerDetection(UBehaviorTreeComponent OwnerComp);
+	
+	UPROPERTY()
 	AAIController* AIController;
+	
 	bool bIsPlayerVisible = false;
 	UPROPERTY(EditAnywhere, Category = "AI")
 	float DetectionRadius = 500.0f;

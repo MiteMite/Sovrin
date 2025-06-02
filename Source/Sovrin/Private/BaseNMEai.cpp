@@ -4,8 +4,8 @@
 #include "NetworkMessage.h"
 #include "BehaviorTree/Decorators/BTDecorator_Blackboard.h"
 #include "BehaviorTree/BTDecorator.h"
-#include "Sovrin/BaseNME.h"
-#include "Sovrin/Saoirse.h"
+#include "Sovrin/Public//BaseNME.h"
+#include "Sovrin/Public/Saoirse.h"
 
 ABaseNMEai::ABaseNMEai()
 {

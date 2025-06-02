@@ -4,7 +4,7 @@
 #include "FindPatrolPointTask.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
-#include "Sovrin/BaseNME.h"
+#include "Sovrin/Public/BaseNME.h"
 #include "Navigation/PathFollowingComponent.h"
 
 UFindPatrolPointTask::UFindPatrolPointTask()

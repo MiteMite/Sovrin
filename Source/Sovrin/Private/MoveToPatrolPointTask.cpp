@@ -2,7 +2,7 @@
 
 
 #include "MoveToPatrolPointTask.h"
-#include "Sovrin/BaseNMEai.h"
+#include "Sovrin/Public/BaseNMEai.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
 #include "Navigation/PathFollowingComponent.h"

@@ -29,13 +29,16 @@ public:
 	virtual void BeginPlay() override;
 	virtual void SetupPlayerInputComponent(UInputComponent* PlayerInputComponent) override;
 
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	ATimeTravelGlobal* TimeTravelGameMode;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UTimeTravel* TimeTravelComponent;
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UAIPerceptionStimuliSourceComponent* StimuliSource;
 private:
+	UPROPERTY(VisibleAnywhere, Blueprintable, Category = "Components")
 	USpringArmComponent* SpringCam;
+	UPROPERTY(VisibleAnywhere, Blueprintable, Category = "Components")
 	UCameraComponent* Camera;
 	void MoveForward(const FInputActionInstance& Inst);
 	void MoveRight(const FInputActionInstance& Inst);

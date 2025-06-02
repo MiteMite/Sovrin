@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 #include "TimeTravel.h"
 #include "ComponentUtils.h"
-#include "Sovrin/Saoirse.h"
+#include "Sovrin/Public/Saoirse.h"
 #include "Engine/World.h"
 #include "TimeTravelGlobal.h"
 #include "Kismet/GameplayStatics.h"

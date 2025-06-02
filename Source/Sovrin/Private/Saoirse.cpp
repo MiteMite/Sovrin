@@ -1,10 +1,10 @@
-﻿#include "Sovrin/Saoirse.h"
+﻿#include "Sovrin/Public/Saoirse.h"
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "TimeTravelGlobal.h"
 #include "GameFramework/GameModeBase.h"
-#include "Sovrin/TimeTravel.h"
+#include "Sovrin/Public/TimeTravel.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetStringLibrary.h"
 

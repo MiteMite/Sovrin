@@ -49,33 +49,76 @@ public:
 	virtual void Tick(float DeltaSeconds) override;
 	virtual void BeginPlay() override;
 private:
+	
 	UBehaviorTreeComponent* GetBehaviorTreeComponent();
 	void LogActiveBehaviorTreeNode();
 	void LogBlackboardKeys();
+
+	UPROPERTY()
 	const UBTNode* ActiveNode;
+	
+	UPROPERTY()
 	TArray<UBTTaskNode*> ActiveTasks;
+	
 	//blackboard keys
 	FBlackboardEntry PlayerLocation = *new FBlackboardEntry();
+	
+	UPROPERTY()
 	UBlackboardKeyType_Vector* PlayerLocationKeyType = NewObject<UBlackboardKeyType_Vector>();
+
+	UPROPERTY()
 	FBlackboardEntry PatrolPointLocation =  *new FBlackboardEntry();
+
+	UPROPERTY()
 	UBlackboardKeyType_Vector* PatrolPointLocationKeyType = NewObject<UBlackboardKeyType_Vector>();
 	FBlackboardEntry IsPlayerVisible = *new FBlackboardEntry();
+
+	UPROPERTY()
 	UBlackboardKeyType_Bool* IsPlayerVisibleKeyType = NewObject<UBlackboardKeyType_Bool>();
 	FBlackboardEntry IsPlayerNOTVisible = *new FBlackboardEntry();
+
+	UPROPERTY()
 	UBlackboardKeyType_Bool* IsPlayerNOTVisibleKeyType = NewObject<UBlackboardKeyType_Bool>();
+
+	
 	//Behavior tree nodes services and tasks
+
+	UPROPERTY()
 	UBTComposite_Sequence* RootSequence;
+	
+	UPROPERTY()
 	UDetectPlayerService* DetectService;
+
+	UPROPERTY()
 	UBTComposite_Selector* MainSelector;
+
+	UPROPERTY()
 	UBTComposite_Sequence* ChaseSequence;
+
+	UPROPERTY()
 	UChasePlayerTask* ChasePlayerTask;
+
+	UPROPERTY()
 	UBTComposite_Sequence* PatrolSequence;
+
+	UPROPERTY()
 	UBTComposite_Sequence* PatrolPointTaskSequence;
+
+	UPROPERTY()
 	UFindPatrolPointTask* FindPatrolPointTask;
+
+	UPROPERTY()
 	UMoveToPatrolPointTask* MoveToPatrolPointTask;
+
+	UPROPERTY()
 	UIsPlayerVisibleDecorator* IsPlayerVisibleDecorator;
+
+	UPROPERTY()
 	UIsPlayerNOTVisibleDecorator* IsPlayerNOTVisibleDecorator;
+
+	UPROPERTY()
 	UAbortableWaitTask* WaitTask;
+	
 	//patrol points
 	UPROPERTY(EditAnywhere, Category = "AI")
 	TArray<AActor*> ControllerPatrolPoints;
@@ -92,6 +135,7 @@ private:
 	UPROPERTY(EditAnywhere, Category = "AI")
 	UAISenseConfig_Sight* SightSenseConfig;
 	int32 CurrentPatrolPointIndexINT32 = 0;
+	
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AI")
 	class UBehaviorTree* BehaviorTree;	

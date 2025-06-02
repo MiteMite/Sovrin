@@ -4,7 +4,7 @@
 #include "ChasePlayerTask.h"
 #include "BehaviorTree/BlackboardComponent.h"
 #include "AIController.h"
-#include "Sovrin/BaseNMEai.h"
+#include "Sovrin/Public//BaseNMEai.h"
 #include "Navigation/PathFollowingComponent.h"
 
 UChasePlayerTask::UChasePlayerTask()
