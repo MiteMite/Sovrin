@@ -48,3 +48,4 @@
 *.csproj
 *.sln.DotSettings
 *.sln.DotSettings.user
+/Sovrin.png

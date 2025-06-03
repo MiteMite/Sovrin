@@ -149,13 +149,13 @@ void ABaseNMEai::BeginPlay()
 	APawn* ControlledPawn = GetPawn();
 	if (!ControlledPawn)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Controlled Pawn is null"));
+		//UE_LOG(LogTemp, Warning, TEXT("Controlled Pawn is null"));
 		return;
 	}
 	ABaseNME* ParentBaseNME = Cast<ABaseNME>(ControlledPawn);
 	if (!ParentBaseNME)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Controlled Pawn is not a BaseNME"));
+		//UE_LOG(LogTemp, Warning, TEXT("Controlled Pawn is not a BaseNME"));
 		return;
 	}
 	if (ParentBaseNME->IsA(ABaseNME::StaticClass()))
@@ -165,7 +165,7 @@ void ABaseNMEai::BeginPlay()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Owning actor is not a BaseNME"));
+		//UE_LOG(LogTemp, Warning, TEXT("Owning actor is not a BaseNME"));
 	}
 
 	
@@ -176,7 +176,7 @@ void ABaseNMEai::BeginPlay()
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to load behavior tree or blackboard component"));
+		//UE_LOG(LogTemp, Warning, TEXT("Failed to load behavior tree or blackboard component"));
 	}
 }
 
@@ -220,7 +220,7 @@ void ABaseNMEai::Tick(float DeltaSeconds)
 		UE_LOG(LogTemp, Warning, TEXT("Current State - PlayerVisible: %s"), 
 			   bPlayerVisible ? TEXT("TRUE") : TEXT("FALSE"));
 	}*/
-	LogActiveBehaviorTreeNode();
+	//LogActiveBehaviorTreeNode();
 	//LogBlackboardKeys();
 }
 

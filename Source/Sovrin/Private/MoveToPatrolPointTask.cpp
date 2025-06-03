@@ -25,12 +25,12 @@ EBTNodeResult::Type UMoveToPatrolPointTask::ExecuteTask(UBehaviorTreeComponent& 
 
 	if (MoveResult == EPathFollowingRequestResult::RequestSuccessful)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Move to patrol point Task - Movement Started"));
+		//UE_LOG(LogTemp, Warning, TEXT("Move to patrol point Task - Movement Started"));
 		return EBTNodeResult::InProgress;
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Move to patrol point Task - Movement Failed"));
+		//UE_LOG(LogTemp, Warning, TEXT("Move to patrol point Task - Movement Failed"));
 		return EBTNodeResult::Failed;
 	}
 }
@@ -60,7 +60,7 @@ void UMoveToPatrolPointTask::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, u
 	if (CachedAIController)
 	{
 		CachedAIController->StopMovement();
-		UE_LOG(LogTemp, Warning, TEXT("Move to patrol point Task - Movement Stopped"));
+		//UE_LOG(LogTemp, Warning, TEXT("Move to patrol point Task - Movement Stopped"));
 		Cast<ABaseNMEai>(CachedAIController)->GetNextPatrolPoint();
 		CachedAIController->GetBlackboardComponent()->SetValueAsVector("PatrolPointLocation", PatrolPointLocation);
 	}

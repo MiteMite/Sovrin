@@ -42,12 +42,12 @@ EBTNodeResult::Type UChasePlayerTask::ExecuteTask(UBehaviorTreeComponent& OwnerC
 	
 	if (MoveResult == EPathFollowingRequestResult::RequestSuccessful)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Chase Player Task - Movement Started"));
+		//UE_LOG(LogTemp, Warning, TEXT("Chase Player Task - Movement Started"));
 		return EBTNodeResult::InProgress; //Keep task running
 	}
 	else
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Chase Player Task - Movement Failed"));
+		//UE_LOG(LogTemp, Warning, TEXT("Chase Player Task - Movement Failed"));
 		return EBTNodeResult::Failed;
 	}
 }
@@ -85,7 +85,7 @@ void UChasePlayerTask::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* 
 	if (CachedAIController)
 	{
 		CachedAIController->StopMovement();
-		UE_LOG(LogTemp, Warning, TEXT("Chase Player Task - Movement Stopped"));
+		//UE_LOG(LogTemp, Warning, TEXT("Chase Player Task - Movement Stopped"));
 	}
 	CachedAIController = nullptr;
 	Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);

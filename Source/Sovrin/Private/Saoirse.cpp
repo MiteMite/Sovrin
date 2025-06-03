@@ -11,11 +11,19 @@
 
 ASaoirse::ASaoirse()
 {
+	//Store default camera settings for switching back to top down
+	DefaultTargetArmLength = 900.0f;
+	DefaultRelativeLocation = FVector(0.0f, 0.0f, 50.0f);
+	DefaultRelativeRotation = FRotator(-60.0f, 0.0f, 0.0f);
+
+	//Load input mappings
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext> InputMappingContextObject(TEXT("/Game/SovrinClasses/InputMapping/IMC_Base.IMC_Base"));
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputForwardObject(TEXT("/Game/SovrinClasses/InputMapping/IA_MoveForward.IA_MoveForward"));
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputRightObject(TEXT("/Game/SovrinClasses/InputMapping/IA_MoveRight.IA_MoveRight"));
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputRewindObject(TEXT("/Game/SovrinClasses/InputMapping/IA_Rewind.IA_Rewind"));
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputCrouchObject(TEXT("/Game/SovrinClasses/InputMapping/IA_Crouch.IA_Crouch"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> UInputFirstPersonToggleObject(TEXT("/Game/SovrinClasses/InputMapping/IA_FPSToggle.IA_FPSToggle"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> UInputLookObject(TEXT("/Game/SovrinClasses/InputMapping/IA_FPSLook.IA_FPSLook"));
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> USkeletalMeshObject(TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny.SKM_Manny"));
 	static ConstructorHelpers::FObjectFinder<UAnimBlueprint> UAnimationClass(TEXT("/Game/Characters/Mannequins/Animations/ABP_Manny.ABP_Manny"));
 
@@ -26,11 +34,15 @@ ASaoirse::ASaoirse()
 	InputRightAction = UInputRightObject.Object;
 	InputRewind = UInputRewindObject.Object;
 	InputCrouch = UInputCrouchObject.Object;
+	InputFirstPersonToggle = UInputFirstPersonToggleObject.Object;
+	InputLook = UInputLookObject.Object;
+	
 	this->GetMesh()->SetSkeletalMeshAsset(USkeletalMeshObject.Object);
 	this->GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -90.0f));
 	this->GetCharacterMovement()->GravityScale = 20.0f;
 	this->GetCharacterMovement()->MaxWalkSpeedCrouched = 150.0f;
 	TimeTravelComponent = CreateDefaultSubobject<UTimeTravel>(TEXT("TimeTravel"));
+
 	// Create the CameraBoom (SpringArmComponent)
 	SpringCam = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
 	SpringCam->SetupAttachment(this->GetRootComponent());
@@ -48,8 +60,10 @@ ASaoirse::ASaoirse()
 	Camera->SetupAttachment(SpringCam); // Attach the camera to the CameraBoom
 	// Configure the CameraComponent
 	Camera->bUsePawnControlRotation = false; // Do not rotate the camera with the pawn
-	SpringCam->SetRelativeRotation(FRotator(-80.0f, 0.0f, 0.0f));
-
+	SpringCam->SetRelativeRotation(DefaultRelativeRotation);
+	SpringCam->SetRelativeLocation(DefaultRelativeLocation);
+	
+	//Create AI Stimuli Source
 	StimuliSource = CreateDefaultSubobject<UAIPerceptionStimuliSourceComponent>(TEXT("StimuliSource"));
 	StimuliSource->RegisterForSense(UAISense_Sight::StaticClass());
 
@@ -99,6 +113,13 @@ void ASaoirse::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		Input->BindAction(InputRewind,ETriggerEvent::Started, this, &ASaoirse::RewindTime);
 		Input->BindAction(InputRewind,ETriggerEvent::Completed, this, &ASaoirse::RewindTime);
 		Input->BindAction(InputCrouch,ETriggerEvent::Started, this, &ASaoirse::CrouchProne);
+
+		//camera toggle binding - triggers on press and release
+		Input->BindAction(InputFirstPersonToggle, ETriggerEvent::Started, this, &ASaoirse::StartFirstPersonMode);
+		Input->BindAction(InputFirstPersonToggle, ETriggerEvent::Completed, this, &ASaoirse::StopFirstPersonMode);
+
+		//Mouse look binding
+		Input->BindAction(InputLook, ETriggerEvent::Triggered, this, &ASaoirse::FirstPersonLook);
 	}
 }
 
@@ -150,8 +171,75 @@ void ASaoirse::RewindTime(const FInputActionInstance& Inst)
 			}
 		}
 	}
-
 }
+
+void ASaoirse::StartFirstPersonMode(const FInputActionInstance& Inst)
+{
+	UE_LOG(LogTemp, Display, TEXT("First person mode"));
+	if (!bIsFirstPersonMode)
+	{
+		bIsFirstPersonMode = true;
+
+		//Switch to first person view
+		SpringCam->TargetArmLength = 0.0f;
+		SpringCam->SetRelativeLocation(FVector::ZeroVector); //head level
+		SpringCam->SetRelativeRotation(FRotator::ZeroRotator); //face forward
+		SpringCam->bDoCollisionTest = false;//disable collision
+
+		//hide character mesh in first person mode
+		if (GetMesh())
+		{
+			GetMesh()->SetOwnerNoSee(true);
+		}
+	}
+}
+
+void ASaoirse::StopFirstPersonMode(const FInputActionInstance& Inst)
+{
+	UE_LOG(LogTemp, Display, TEXT("Stop first person mode"));
+	if (bIsFirstPersonMode)
+	{
+		bIsFirstPersonMode = false;
+
+		//switch back to top down view
+		SpringCam->TargetArmLength = DefaultTargetArmLength;
+		SpringCam->SetRelativeLocation(DefaultRelativeLocation);
+		SpringCam->SetRelativeRotation(DefaultRelativeRotation);
+		SpringCam->bDoCollisionTest = true; //re enable collision
+		
+		//show character mesh in top down mode
+		if (GetMesh())
+		{
+			GetMesh()->SetOwnerNoSee(false);
+		}
+	}
+}
+
+void ASaoirse::FirstPersonLook(const FInputActionInstance& Inst)
+{
+	if (!bIsFirstPersonMode)
+	{
+		return;
+	}
+	FVector2D LookAxisVector = Inst.GetValue().Get<FVector2D>();
+	//Apply mouse sensitivity
+	LookAxisVector *= MouseSensitivity;
+
+	//Add yaw input
+	AddControllerYawInput(LookAxisVector.X);
+
+	//add pitch input
+	float CurrentPitch = GetControlRotation().Pitch;
+	float NewPitch = CurrentPitch + (-LookAxisVector.Y);
+
+	//clamp to prevent over rotation
+	NewPitch = FMath::Clamp(NewPitch, FirstPersonPitchMin, FirstPersonPitchMax);
+
+	//calculate pitch delta and apply
+	float PitchDelta = NewPitch - CurrentPitch;
+	AddControllerPitchInput(PitchDelta);
+}
+
 
 ASaoirse::~ASaoirse()
 {

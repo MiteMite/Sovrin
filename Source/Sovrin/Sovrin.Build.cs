@@ -10,7 +10,11 @@ public class Sovrin : ModuleRules
 	
 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore" , "EnhancedInput", "AIModule"});
 
-		PrivateDependencyModuleNames.AddRange(new string[] { "BehaviorTreeEditor" });
+		if (Target.Type == TargetType.Editor)
+		{
+			PrivateDependencyModuleNames.AddRange(new string[] { "BehaviorTreeEditor" });
+		}
+		
 
 		// Uncomment if you are using Slate UI
 		// PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });

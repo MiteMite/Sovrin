@@ -18,7 +18,7 @@ EBTNodeResult::Type UFindPatrolPointTask::ExecuteTask(UBehaviorTreeComponent& Ow
 	UBlackboardComponent* BlackboardComponent = AIController->GetBlackboardComponent();
 	if (!AIController && !BlackboardComponent )
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Failed to load Ai controller and blackboard component"));
+		//UE_LOG(LogTemp, Warning, TEXT("Failed to load Ai controller and blackboard component"));
 		return EBTNodeResult::Failed;
 	}
 	else

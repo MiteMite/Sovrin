@@ -36,14 +36,36 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UAIPerceptionStimuliSourceComponent* StimuliSource;
 private:
+	
 	UPROPERTY(VisibleAnywhere, Blueprintable, Category = "Components")
 	USpringArmComponent* SpringCam;
 	UPROPERTY(VisibleAnywhere, Blueprintable, Category = "Components")
 	UCameraComponent* Camera;
+
+	//Camera system variables
+	bool bIsFirstPersonMode = false;
+	float DefaultTargetArmLength = 900.0f;
+	FVector DefaultRelativeLocation = FVector(0.0f, 0.0f, 50.0f);
+	FRotator DefaultRelativeRotation = FRotator(-60.0f, 0.0f, 0.0f);
+
+	//Mouse sensitivity settings
+	UPROPERTY(EditAnywhere, Category = "Camera", meta = (ClampMin = "0.1", ClampMax = "5.0"))
+	float MouseSensitivity = 1.0f;
+
+	//Pitch limits for first person camera
+	UPROPERTY(EditAnywhere, Category = "Camera", meta = (ClampMin = "-170", ClampMax = "170"))
+	float FirstPersonPitchMin = -170.0f;
+	UPROPERTY(EditAnywhere, Category = "Camera", meta = (ClampMin = "-170", ClampMax = "170"))
+	float FirstPersonPitchMax = 170.0f;
+
+	//Input functions
 	void MoveForward(const FInputActionInstance& Inst);
 	void MoveRight(const FInputActionInstance& Inst);
 	void CrouchProne(const FInputActionInstance& Inst);
 	void RewindTime(const FInputActionInstance& Inst);
+	void StartFirstPersonMode(const FInputActionInstance& Inst);
+	void StopFirstPersonMode(const FInputActionInstance& Inst);
+	void FirstPersonLook(const FInputActionInstance& Inst);
 	
 protected:
 	virtual ~ASaoirse() override;
@@ -62,4 +84,10 @@ protected:
 	
 	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
 	class UInputAction* InputCrouch;
+
+	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+	class UInputAction* InputFirstPersonToggle;
+
+	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+	class UInputAction* InputLook;
 };
