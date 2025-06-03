@@ -19,11 +19,11 @@ EBTNodeResult::Type UAbortableWaitTask::ExecuteTask(UBehaviorTreeComponent& Owne
 	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
 	if (BlackboardComponent && BlackboardComponent->GetValueAsBool("IsPlayerVisible"))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Wait task - player visible on execute, aborting immediately"));
+		//UE_LOG(LogTemp, Warning, TEXT("Wait task - player visible on execute, aborting immediately"));
 		return EBTNodeResult::Failed;
 	}
     
-	UE_LOG(LogTemp, Warning, TEXT("Wait task started"));
+	//UE_LOG(LogTemp, Warning, TEXT("Wait task started"));
 	return Super::ExecuteTask(OwnerComp, NodeMemory);
 }
 
@@ -33,7 +33,7 @@ void UAbortableWaitTask::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* Node
 	UBlackboardComponent* BlackboardComponent = OwnerComp.GetBlackboardComponent();
 	if (BlackboardComponent && BlackboardComponent->GetValueAsBool("IsPlayerVisible"))
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Wait task aborted - player visible during tick"));
+		//UE_LOG(LogTemp, Warning, TEXT("Wait task aborted - player visible during tick"));
 		FinishLatentTask(OwnerComp, EBTNodeResult::Failed);
 		return;
 	}
@@ -44,6 +44,6 @@ void UAbortableWaitTask::TickTask(UBehaviorTreeComponent& OwnerComp, uint8* Node
 
 void UAbortableWaitTask::OnTaskFinished(UBehaviorTreeComponent& OwnerComp, uint8* NodeMemory, EBTNodeResult::Type TaskResult)
 {
-	UE_LOG(LogTemp, Warning, TEXT("Wait task finished with result: %d"), (int32)TaskResult);
+	//UE_LOG(LogTemp, Warning, TEXT("Wait task finished with result: %d"), (int32)TaskResult);
 	Super::OnTaskFinished(OwnerComp, NodeMemory, TaskResult);
 }

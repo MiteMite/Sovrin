@@ -53,10 +53,10 @@ private:
 	float MouseSensitivity = 1.0f;
 
 	//Pitch limits for first person camera
-	UPROPERTY(EditAnywhere, Category = "Camera", meta = (ClampMin = "-170", ClampMax = "170"))
-	float FirstPersonPitchMin = -170.0f;
-	UPROPERTY(EditAnywhere, Category = "Camera", meta = (ClampMin = "-170", ClampMax = "170"))
-	float FirstPersonPitchMax = 170.0f;
+	UPROPERTY(EditAnywhere, Category = "Camera", meta = (ClampMin = "-90", ClampMax = "0.0"))
+	float FirstPersonPitchMin = -90.0f;
+	UPROPERTY(EditAnywhere, Category = "Camera", meta = (ClampMin = "0.0", ClampMax = "90"))
+	float FirstPersonPitchMax = 90.0f;
 
 	//Input functions
 	void MoveForward(const FInputActionInstance& Inst);
