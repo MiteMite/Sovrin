@@ -36,6 +36,8 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UAIPerceptionStimuliSourceComponent* StimuliSource;
 private:
+	UFUNCTION()
+	void UpdateRotationBasedOnMovement();
 	
 	UPROPERTY(VisibleAnywhere, Blueprintable, Category = "Components")
 	USpringArmComponent* SpringCam;
@@ -44,9 +46,10 @@ private:
 
 	//Camera system variables
 	bool bIsFirstPersonMode = false;
-	float DefaultTargetArmLength = 900.0f;
-	FVector DefaultRelativeLocation = FVector(0.0f, 0.0f, 50.0f);
-	FRotator DefaultRelativeRotation = FRotator(-60.0f, 0.0f, 0.0f);
+	float DefaultTargetArmLength = 900.0f;										//camera is 900 units away from the character
+	FVector DefaultRelativeLocation = FVector(0.0f, 0.0f, 50.0f);	//camera is 50 units above the character
+	FRotator DefaultRelativeRotation = FRotator(-60.0f, 180.0f, 0.0f); //Looks down 60 degrees, and is rotated 180 degrees around the Y axis
+	FRotator LastKnownCameraRotation = FRotator::ZeroRotator;
 
 	//Mouse sensitivity settings
 	UPROPERTY(EditAnywhere, Category = "Camera", meta = (ClampMin = "0.1", ClampMax = "5.0"))

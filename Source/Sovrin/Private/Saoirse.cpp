@@ -2,7 +2,9 @@
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "MaterialHLSLTree.h"
 #include "TimeTravelGlobal.h"
+#include "Components/CapsuleComponent.h"
 #include "GameFramework/GameModeBase.h"
 #include "Sovrin/Public/TimeTravel.h"
 #include "Kismet/GameplayStatics.h"
@@ -11,11 +13,6 @@
 
 ASaoirse::ASaoirse()
 {
-	//Store default camera settings for switching back to top down
-	DefaultTargetArmLength = 900.0f;
-	DefaultRelativeLocation = FVector(0.0f, 0.0f, 50.0f);
-	DefaultRelativeRotation = FRotator(-60.0f, 0.0f, 0.0f);
-
 	//Load input mappings
 	static ConstructorHelpers::FObjectFinder<UInputMappingContext> InputMappingContextObject(TEXT("/Game/SovrinClasses/InputMapping/IMC_Base.IMC_Base"));
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputForwardObject(TEXT("/Game/SovrinClasses/InputMapping/IA_MoveForward.IA_MoveForward"));
@@ -38,9 +35,11 @@ ASaoirse::ASaoirse()
 	InputLook = UInputLookObject.Object;
 	
 	this->GetMesh()->SetSkeletalMeshAsset(USkeletalMeshObject.Object);
+	this->GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -40.0f));
+	this->GetMesh()->SetRelativeRotation(FRotator(0.0f, -90.0f, 0.0f));
 	this->GetCharacterMovement()->bOrientRotationToMovement=false; //Character turns towards movement direction
-	this->GetCharacterMovement()->RotationRate = FRotator(0.0f, 600.0f, 0.0f); // 1 rotation per second
-	this->GetCharacterMovement()->bUseControllerDesiredRotation = true; // Rotate the character to match the controller instead of the animation
+	this->GetCharacterMovement()->RotationRate = FRotator(0.0f, 1.0f, 0.0f); // 1 rotation per second
+	this->GetCharacterMovement()->bUseControllerDesiredRotation = false;
 	this->GetCharacterMovement()->GravityScale = 20.0f;
 	this->GetCharacterMovement()->MaxWalkSpeedCrouched = 150.0f;
 
@@ -53,12 +52,11 @@ ASaoirse::ASaoirse()
 
 	// Configure the CameraBoom properties
 	SpringCam->TargetArmLength = 900.0f; // Set the distance between the camera and the pawn
-	SpringCam->bUsePawnControlRotation = true; // Let the boom follow the pawn's control rotation
+	SpringCam->bUsePawnControlRotation = false; // Let the boom follow the pawn's control rotation
 	SpringCam->bDoCollisionTest = false; // Don't want to collide with the pawn
 	SpringCam->bEnableCameraLag = true; // Enable camera lag
 	SpringCam->CameraLagSpeed = 10.0f; // Set the camera lag speed
 	SpringCam->CameraLagMaxDistance = 1000.0f; // Set the maximum distance the camera can lag
-	SpringCam->bUsePawnControlRotation = true; // Let the boom follow the pawn's control rotation
 	
 	// Create the CameraComponent
 	Camera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
@@ -86,6 +84,11 @@ ASaoirse::ASaoirse()
 void ASaoirse::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
+
+	if (!bIsFirstPersonMode)
+	{
+		UpdateRotationBasedOnMovement();
+	}
 }
 
 void ASaoirse::BeginPlay()
@@ -126,77 +129,90 @@ void ASaoirse::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 {
 	float InputValue = Inst.GetValue().Get<float>();
-	
-	if (InputValue!=0.0f)
-	{
-		FVector MovementDirection;
-		if (bIsFirstPersonMode)
-		{
-			if (Controller)
-			{
-				FRotator ControlRotation = Controller->GetControlRotation();
-				MovementDirection = FRotationMatrix(FRotator(0.0f,ControlRotation.Yaw,0.0f)).GetUnitAxis(EAxis::X);
-			}
-		}
-		else
-		{
-			if (Camera)
-			{
-				FVector CameraForward = Camera->GetForwardVector();
-				//Project Camera forward onto the ground plane
-				MovementDirection = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
 
-				if (MovementDirection.IsNearlyZero())
+	//no movement in first person mode
+	if (!bIsFirstPersonMode)
+	{
+		if (InputValue!=0.0f)
+		{
+			FVector MovementDirection;
+			if (bIsFirstPersonMode)
+			{
+				if (Controller)
 				{
-					MovementDirection = this->GetActorForwardVector();
+					FRotator ControlRotation = Controller->GetControlRotation();
+					MovementDirection = FRotationMatrix(FRotator(0.0f,ControlRotation.Yaw,0.0f)).GetUnitAxis(EAxis::X);
 				}
 			}
 			else
 			{
-				MovementDirection = FVector::ForwardVector; // world fallback
+				if (Camera)
+				{
+					FVector CameraForward = Camera->GetForwardVector();
+					//Project Camera forward onto the ground plane
+					MovementDirection = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
+
+					if (MovementDirection.IsNearlyZero())
+					{
+						MovementDirection = this->GetActorForwardVector();
+					}
+				}
+				else
+				{
+					MovementDirection = FVector::ForwardVector; // world fallback
+				}
 			}
-		}
 		
-		AddMovementInput(MovementDirection, InputValue);
+			AddMovementInput(MovementDirection, InputValue);
+
+		}
 	}
+
 }
 
 void ASaoirse::MoveRight(const FInputActionInstance& Inst)
 {
 	float InputValue = Inst.GetValue().Get<float>();
-	
-	if (InputValue!=0.0f)
-	{
-		FVector MovementDirection;
-		if (bIsFirstPersonMode)
-		{
-			if (Controller)
-			{
-				FRotator ControlRotation = Controller->GetControlRotation();
-				MovementDirection = FRotationMatrix(FRotator(0.0f,ControlRotation.Yaw,0.0f)).GetUnitAxis(EAxis::Y);
-			}
-		}
-		else
-		{
-			if (Camera)
-			{
-				FVector CameraForward = Camera->GetRightVector();
-				//Project Camera forward onto the ground plane
-				MovementDirection = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
 
-				if (MovementDirection.IsNearlyZero())
+	//no movement in first person mode
+	if (!bIsFirstPersonMode)
+	{
+		if (InputValue!=0.0f)
+		{
+			FVector MovementDirection;
+			if (bIsFirstPersonMode)
+			{
+				if (Controller)
 				{
-					MovementDirection = this->GetActorRightVector();
+					FRotator ControlRotation = Controller->GetControlRotation();
+					MovementDirection = FRotationMatrix(FRotator(0.0f,ControlRotation.Yaw,0.0f)).GetUnitAxis(EAxis::Y);
 				}
 			}
 			else
 			{
-				MovementDirection = FVector::RightVector; // world fallback
+				if (Camera)
+				{
+					FVector CameraForward = Camera->GetRightVector();
+					//Project Camera forward onto the ground plane
+					MovementDirection = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
+
+					if (MovementDirection.IsNearlyZero())
+					{
+						MovementDirection = this->GetActorRightVector();
+					}
+				}
+				else
+				{
+					MovementDirection = FVector::RightVector; // world fallback
+				}
 			}
-		}
 		
-		AddMovementInput(MovementDirection, InputValue);
+			AddMovementInput(MovementDirection, InputValue);
+		
+		}
 	}
+	
+
 }
 
 void ASaoirse::CrouchProne(const FInputActionInstance& Inst)
@@ -248,13 +264,16 @@ void ASaoirse::StartFirstPersonMode(const FInputActionInstance& Inst)
 		bIsFirstPersonMode = true;
 
 		//disable rotation to movement for first person mode
-		/*this->GetCharacterMovement()->bOrientRotationToMovement = false;
-		this->GetCharacterMovement()->bUseControllerDesiredRotation = true;*/
+		SpringCam->bInheritPitch = true;
+		SpringCam->bInheritYaw = true;
+		SpringCam->bInheritRoll = true;
+		this->GetCharacterMovement()->bOrientRotationToMovement = false;
+		this->GetCharacterMovement()->bUseControllerDesiredRotation = true;
 		
 		FRotator InitialRotation = FRotator::ZeroRotator;
 		if (Controller)
 		{
-			FVector CurrentVelocity = GetVelocity();
+			FVector CurrentVelocity = GetCharacterMovement()->Velocity;
 
 			if (!CurrentVelocity.IsNearlyZero())
 			{
@@ -295,8 +314,11 @@ void ASaoirse::StopFirstPersonMode(const FInputActionInstance& Inst)
 		bIsFirstPersonMode = false;
 		
 		//re enable rotation to movement for first person mode
-		/*this->GetCharacterMovement()->bOrientRotationToMovement = true;
-		this->GetCharacterMovement()->bUseControllerDesiredRotation = false;*/
+		SpringCam->bInheritPitch = false;
+		SpringCam->bInheritYaw = false;
+		SpringCam->bInheritRoll = false;
+		this->GetCharacterMovement()->bOrientRotationToMovement = true;
+		this->GetCharacterMovement()->bUseControllerDesiredRotation = false;
 
 		//switch back to top down view
 		SpringCam->TargetArmLength = DefaultTargetArmLength;
@@ -338,6 +360,28 @@ void ASaoirse::FirstPersonLook(const FInputActionInstance& Inst)
 	AddControllerPitchInput(-LookAxisVector.Y);
 }
 
+void ASaoirse::UpdateRotationBasedOnMovement()
+{
+	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
+	{
+		FVector CurrentVelocity = GetCharacterMovement()->Velocity;
+		
+		if (CurrentVelocity.Size() > 0.1f)
+		{
+			
+			FVector MovementDirection = FVector(CurrentVelocity.X, CurrentVelocity.Y, 0.0f).GetSafeNormal();
+			FRotator TargetRotation = MovementDirection.Rotation();
+			FRotator CurrentRotation = GetActorRotation();
+			FRotator NewRotation = FRotator(CurrentRotation.Pitch, TargetRotation.Yaw, CurrentRotation.Roll);
+			LastKnownCameraRotation = NewRotation;
+			SetActorRotation(NewRotation);
+		}
+		else
+		{
+			SetActorRotation(LastKnownCameraRotation);
+		}
+	}
+}
 
 ASaoirse::~ASaoirse()
 {
