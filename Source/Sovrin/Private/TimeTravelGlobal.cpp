@@ -8,6 +8,9 @@
 ATimeTravelGlobal::ATimeTravelGlobal()
 {
 	DefaultPawnClass= ASaoirse::StaticClass();
+	// Set HUD class
+	HUDClass = ASovrinHUD::StaticClass();
+
 }
 
 void ATimeTravelGlobal::BeginPlay()
@@ -23,6 +26,11 @@ void ATimeTravelGlobal::BeginPlay()
 			TimeTravelActorsInWorld.Add(Actor->FindComponentByClass<UTimeTravel>());
 		}
 	}
+}
+
+void ATimeTravelGlobal::InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage)
+{
+	Super::InitGame(MapName, Options, ErrorMessage);
 }
 
 ATimeTravelGlobal::~ATimeTravelGlobal()

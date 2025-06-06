@@ -69,6 +69,7 @@ private:
 	void StartFirstPersonMode(const FInputActionInstance& Inst);
 	void StopFirstPersonMode(const FInputActionInstance& Inst);
 	void FirstPersonLook(const FInputActionInstance& Inst);
+	void TogglePauseMenu(const FInputActionInstance& Inst);
 	
 protected:
 	virtual ~ASaoirse() override;
@@ -93,4 +94,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
 	class UInputAction* InputLook;
+
+	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+	class UInputAction* InputPauseMenu;
 };

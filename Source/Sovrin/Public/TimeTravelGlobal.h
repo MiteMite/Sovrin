@@ -6,6 +6,7 @@
 #include "TimeTravel.h"
 #include "GameFramework/GameModeBase.h"
 #include "Delegates/Delegate.h"
+#include "Sovrin/Public/SovrinHUD.h"
 #include "TimeTravelGlobal.generated.h"
 
 /**
@@ -20,10 +21,11 @@ class SOVRIN_API ATimeTravelGlobal : public AGameModeBase
 	
 public:
 	ATimeTravelGlobal();
-	virtual void BeginPlay() override;
 	TArray<AActor*> ActorsInWorld;
 	TArray<UTimeTravel*> TimeTravelActorsInWorld;
 	
 protected:
+	virtual void BeginPlay() override;
+	virtual void InitGame(const FString& MapName, const FString& Options, FString& ErrorMessage) override;
 	virtual ~ATimeTravelGlobal() override; //destructor
 };

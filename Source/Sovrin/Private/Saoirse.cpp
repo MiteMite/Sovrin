@@ -21,6 +21,7 @@ ASaoirse::ASaoirse()
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputCrouchObject(TEXT("/Game/SovrinClasses/InputMapping/IA_Crouch.IA_Crouch"));
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputFirstPersonToggleObject(TEXT("/Game/SovrinClasses/InputMapping/IA_FPSToggle.IA_FPSToggle"));
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputLookObject(TEXT("/Game/SovrinClasses/InputMapping/IA_FPSLook.IA_FPSLook"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> UInputPauseMenuObject(TEXT("/Game/SovrinClasses/InputMapping/IA_PauseMenu.IA_PauseMenu"));
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> USkeletalMeshObject(TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny.SKM_Manny"));
 	static ConstructorHelpers::FObjectFinder<UAnimBlueprint> UAnimationClass(TEXT("/Game/Characters/Mannequins/Animations/ABP_Manny.ABP_Manny"));
 
@@ -33,6 +34,7 @@ ASaoirse::ASaoirse()
 	InputCrouch = UInputCrouchObject.Object;
 	InputFirstPersonToggle = UInputFirstPersonToggleObject.Object;
 	InputLook = UInputLookObject.Object;
+	InputPauseMenu = UInputPauseMenuObject.Object;
 	
 	this->GetMesh()->SetSkeletalMeshAsset(USkeletalMeshObject.Object);
 	this->GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -40.0f));
@@ -123,6 +125,8 @@ void ASaoirse::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 		//Mouse look binding
 		Input->BindAction(InputLook, ETriggerEvent::Triggered, this, &ASaoirse::FirstPersonLook);
+
+		Input->BindAction(InputPauseMenu, ETriggerEvent::Started, this, &ASaoirse::TogglePauseMenu);
 	}
 }
 
@@ -379,6 +383,17 @@ void ASaoirse::UpdateRotationBasedOnMovement()
 		else
 		{
 			SetActorRotation(LastKnownCameraRotation);
+		}
+	}
+}
+
+void ASaoirse::TogglePauseMenu(const FInputActionInstance& Inst)
+{
+	if (Inst.GetTriggerEvent()==ETriggerEvent::Started)
+	{
+		if (UGameplayStatics::IsGamePaused(this))
+		{
+			
 		}
 	}
 }
