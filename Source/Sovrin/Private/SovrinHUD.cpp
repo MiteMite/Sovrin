@@ -171,9 +171,64 @@ void ASovrinHUD::DrawMiniMap()
 	DrawLine(MapPosition.X + MapSize, MapPosition.Y + MapSize, MapPosition.X, MapPosition.Y + MapSize, FLinearColor::White, 2.0f);
 	DrawLine(MapPosition.X, MapPosition.Y + MapSize, MapPosition.X, MapPosition.Y, FLinearColor::White, 2.0f);
 
+	// Get player location
+	FVector PlayerLocation = FVector::ZeroVector;
+	if (APawn* PlayerPawn = GetOwningPawn())
+	{
+		PlayerLocation = PlayerPawn->GetActorLocation();
+	}
+
+	// NME AI dot
+	DrawEnemiesOnMinimap(MapPosition, MapSize, PlayerLocation);
 	
 	// Player dot in center
 	const FVector2D PlayerPos(MapPosition.X + MapSize * 0.5f, MapPosition.Y + MapSize * 0.5f);
 	DrawRect(FLinearColor::Blue, PlayerPos.X - 3, PlayerPos.Y - 3, 6, 6);
 }
 
+void ASovrinHUD::DrawEnemiesOnMinimap(const FVector2D& MapPosition, float MapSize, const FVector& PlayerLocation)
+{
+	UWorld* World = GetWorld();
+	if (!World)
+		return;
+
+	// Find all actors with "Enemy" tag
+	TArray<AActor*> EnemyActors;
+	UGameplayStatics::GetAllActorsWithTag(World, FName("Enemy"), EnemyActors);
+
+	for (AActor* Enemy : EnemyActors)
+	{
+		if (!Enemy)
+			continue;
+
+		FVector EnemyLocation = Enemy->GetActorLocation();
+		FVector RelativeLocation = EnemyLocation - PlayerLocation;
+
+		// Check if enemy is within minimap range
+		float Distance = RelativeLocation.Size();
+		if (Distance > MinimapRange)
+			continue;
+
+		// Convert 3D world coordinates to 2D minimap coordinates
+		float ScaledX = (RelativeLocation.X * MinimapScale);
+		float ScaledY = (RelativeLocation.Y * MinimapScale);
+
+		// Clamp to minimap boundaries
+		float HalfMapSize = MapSize * 0.5f;
+		ScaledX = FMath::Clamp(ScaledX, -HalfMapSize, HalfMapSize);
+		ScaledY = FMath::Clamp(ScaledY, -HalfMapSize, HalfMapSize);
+
+		// Calculate final screen position
+		FVector2D EnemyScreenPos;
+		EnemyScreenPos.X = MapPosition.X + HalfMapSize + ScaledX;
+		EnemyScreenPos.Y = MapPosition.Y + HalfMapSize - ScaledY;
+
+		// Draw enemy dot
+		float HalfDotSize = EnemyDotSize * 0.5f;
+		DrawRect(EnemyDotColor, 
+			EnemyScreenPos.X - HalfDotSize, 
+			EnemyScreenPos.Y - HalfDotSize, 
+			EnemyDotSize, 
+			EnemyDotSize);
+	}
+}

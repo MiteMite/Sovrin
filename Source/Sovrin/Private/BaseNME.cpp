@@ -2,6 +2,7 @@
 
 ABaseNME::ABaseNME()
 {
+	Tags.Add(FName("Enemy")); 
 	static ConstructorHelpers::FObjectFinder<UAnimBlueprint> UAnimationClass(TEXT("/Game/Characters/Mannequins/Animations/ABP_Manny.ABP_Manny"));
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> USkeletalMeshObject(TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny.SKM_Manny"));
 	this->GetMesh()->SetSkeletalMesh(USkeletalMeshObject.Object);

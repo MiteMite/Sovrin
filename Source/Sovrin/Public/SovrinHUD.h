@@ -49,6 +49,8 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Menu")
 	void TogglePauseMenu();
 
+	UFUNCTION(BlueprintCallable, Category = "HUD")
+	void DrawEnemiesOnMinimap(const FVector2D& Location, float MapSize, const FVector& PlayerPosition);
 	// Game State
 	UPROPERTY(BlueprintReadOnly, Category = "Game State")
 	bool bIsGamePaused = false;
@@ -68,6 +70,19 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "HUD Display")
 	bool bShowMiniMap = true;
+
+	// Minimap properties
+	UPROPERTY(EditAnywhere, Category = "Minimap")
+	float MinimapScale = 0.1f; // How much world space fits in the minimap
+
+	UPROPERTY(EditAnywhere, Category = "Minimap")
+	float EnemyDotSize = 4.0f;
+
+	UPROPERTY(EditAnywhere, Category = "Minimap")
+	FLinearColor EnemyDotColor = FLinearColor::Red;
+
+	UPROPERTY(EditAnywhere, Category = "Minimap")
+	float MinimapRange = 2000.0f; // Maximum distance to show enemies
 
 	// Crosshair properties
 	UPROPERTY(EditAnywhere, Category = "Crosshair")
