@@ -2,6 +2,8 @@
 
 
 #include "Sovrin/Public/SovrinHUD.h"
+
+#include "ToolBuilderUtil.h"
 #include "Engine/Canvas.h"
 #include "Engine/Font.h"
 #include "GameFramework/PlayerController.h"
@@ -10,14 +12,14 @@
 
 ASovrinHUD::ASovrinHUD()
 {
-	//constructor
+	InitializeWidgets();
 }
 
 void ASovrinHUD::BeginPlay()
 {
 	//do stuff here
 	Super::BeginPlay();
-	//InitializeWidgets();
+	InitializeWidgets();
 }
 
 void ASovrinHUD::DrawHUD()
@@ -26,7 +28,7 @@ void ASovrinHUD::DrawHUD()
 
 	if (bShowCrosshair && !bIsGamePaused)
 	{
-		DrawCrosshair();
+		//DrawCrosshair();
 	}
 
 	if (bShowHealthBar && !bIsGamePaused)
@@ -159,7 +161,7 @@ void ASovrinHUD::DrawMiniMap()
 	// Simple minimap placeholder - you can expand this based on your needs
 	constexpr float MapSize = 150.0f;
 	const FVector2D MapPosition(Canvas->ClipX - MapSize - 20, 20);
-
+	
 	// Minimap background
 	DrawRect(FLinearColor(0.0f, 0.0f, 0.0f, 0.5f), MapPosition.X, MapPosition.Y, MapSize, MapSize);
 	
@@ -169,6 +171,7 @@ void ASovrinHUD::DrawMiniMap()
 	DrawLine(MapPosition.X + MapSize, MapPosition.Y + MapSize, MapPosition.X, MapPosition.Y + MapSize, FLinearColor::White, 2.0f);
 	DrawLine(MapPosition.X, MapPosition.Y + MapSize, MapPosition.X, MapPosition.Y, FLinearColor::White, 2.0f);
 
+	
 	// Player dot in center
 	const FVector2D PlayerPos(MapPosition.X + MapSize * 0.5f, MapPosition.Y + MapSize * 0.5f);
 	DrawRect(FLinearColor::Blue, PlayerPos.X - 3, PlayerPos.Y - 3, 6, 6);

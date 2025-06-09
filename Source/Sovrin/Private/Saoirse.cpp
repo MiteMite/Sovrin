@@ -5,9 +5,11 @@
 #include "MaterialHLSLTree.h"
 #include "TimeTravelGlobal.h"
 #include "Components/CapsuleComponent.h"
+#include "GameFramework/GameMode.h"
 #include "GameFramework/GameModeBase.h"
 #include "Sovrin/Public/TimeTravel.h"
 #include "Kismet/GameplayStatics.h"
+#include "Sovrin/Public/SovrinHUD.h"
 #include "Kismet/KismetStringLibrary.h"
 
 
@@ -391,9 +393,21 @@ void ASaoirse::TogglePauseMenu(const FInputActionInstance& Inst)
 {
 	if (Inst.GetTriggerEvent()==ETriggerEvent::Started)
 	{
-		if (UGameplayStatics::IsGamePaused(this))
+		if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
 		{
-			
+			if (ASovrinHUD* SovrinHUD = Cast<ASovrinHUD>(PlayerController->GetHUD()))
+			{
+				UE_LOG(LogTemp, Display, TEXT("Toggle pause menu"));
+				SovrinHUD->TogglePauseMenu();
+			}
+			else
+			{
+				UE_LOG(LogTemp, Warning, TEXT("No HUD found"));
+			}
+		}
+		else
+		{
+			UE_LOG(LogTemp, Warning, TEXT("No player controller found"));
 		}
 	}
 }

@@ -69,6 +69,7 @@ private:
 	void StartFirstPersonMode(const FInputActionInstance& Inst);
 	void StopFirstPersonMode(const FInputActionInstance& Inst);
 	void FirstPersonLook(const FInputActionInstance& Inst);
+	UFUNCTION()
 	void TogglePauseMenu(const FInputActionInstance& Inst);
 	
 protected:

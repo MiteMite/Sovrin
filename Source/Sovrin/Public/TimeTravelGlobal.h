@@ -21,7 +21,9 @@ class SOVRIN_API ATimeTravelGlobal : public AGameModeBase
 	
 public:
 	ATimeTravelGlobal();
+	UPROPERTY()
 	TArray<AActor*> ActorsInWorld;
+	UPROPERTY()
 	TArray<UTimeTravel*> TimeTravelActorsInWorld;
 	
 protected:
