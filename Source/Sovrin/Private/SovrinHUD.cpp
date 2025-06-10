@@ -158,7 +158,7 @@ void ASovrinHUD::DrawHealthBar()
 
 void ASovrinHUD::DrawMiniMap()
 {
-	// Simple minimap placeholder - you can expand this based on your needs
+	// Simple minimap placeholder
 	constexpr float MapSize = 150.0f;
 	const FVector2D MapPosition(Canvas->ClipX - MapSize - 20, 20);
 	
@@ -210,8 +210,8 @@ void ASovrinHUD::DrawEnemiesOnMinimap(const FVector2D& MapPosition, float MapSiz
 			continue;
 
 		// Convert 3D world coordinates to 2D minimap coordinates
-		float ScaledX = (RelativeLocation.X * MinimapScale);
-		float ScaledY = (RelativeLocation.Y * MinimapScale);
+		float ScaledX = (-RelativeLocation.Y * MinimapScale);
+		float ScaledY = (-RelativeLocation.X * MinimapScale);
 
 		// Clamp to minimap boundaries
 		float HalfMapSize = MapSize * 0.5f;
@@ -222,7 +222,7 @@ void ASovrinHUD::DrawEnemiesOnMinimap(const FVector2D& MapPosition, float MapSiz
 		FVector2D EnemyScreenPos;
 		EnemyScreenPos.X = MapPosition.X + HalfMapSize + ScaledX;
 		EnemyScreenPos.Y = MapPosition.Y + HalfMapSize - ScaledY;
-
+		
 		// Draw enemy dot
 		float HalfDotSize = EnemyDotSize * 0.5f;
 		DrawRect(EnemyDotColor, 
