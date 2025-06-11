@@ -397,7 +397,6 @@ void ASaoirse::TogglePauseMenu(const FInputActionInstance& Inst)
 		{
 			if (ASovrinHUD* SovrinHUD = Cast<ASovrinHUD>(PlayerController->GetHUD()))
 			{
-				UE_LOG(LogTemp, Display, TEXT("Toggle pause menu"));
 				SovrinHUD->TogglePauseMenu();
 			}
 			else

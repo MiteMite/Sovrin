@@ -8,10 +8,14 @@
 #include "Engine/Font.h"
 #include "GameFramework/PlayerController.h"
 #include "Blueprint/UserWidget.h"
+#include "Sovrin/Public/MainMenuWidget.h"
+#include "Sovrin/Public/PauseMenuWidget.h"
 #include "Kismet/GameplayStatics.h"
 
 ASovrinHUD::ASovrinHUD()
 {
+	MainHUDWidgetClass = UMainMenuWidget::StaticClass();
+	PauseMenuWidgetClass = UPauseMenuWidget::StaticClass();
 	InitializeWidgets();
 }
 
@@ -52,10 +56,18 @@ void ASovrinHUD::InitializeWidgets()
 			MainHUDWidget->AddToViewport();
 		}
 	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Main HUD widget class not set"));
+	}
 
 	if (PauseMenuWidgetClass)
 	{
 		PauseMenuWidget = CreateWidget<UUserWidget>(GetWorld(), PauseMenuWidgetClass);
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Pause menu widget class not set"));
 	}
 }
 
@@ -98,9 +110,6 @@ void ASovrinHUD::HidePauseMenu()
 {
 	if (PauseMenuWidget && PauseMenuWidget->IsInViewport())
 	{
-		PauseMenuWidget->RemoveFromParent();
-		bIsGamePaused = false;
-		
 		// Unpause the game
 		UGameplayStatics::SetGamePaused(GetWorld(), false);
 		
@@ -110,6 +119,8 @@ void ASovrinHUD::HidePauseMenu()
 			PC->bShowMouseCursor = false;
 			PC->SetInputMode(FInputModeGameOnly());
 		}
+		PauseMenuWidget->RemoveFromParent();
+		bIsGamePaused = false;
 	}
 }
 

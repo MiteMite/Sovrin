@@ -22,7 +22,6 @@ void ATimeTravelGlobal::BeginPlay()
 	{
 		if (Actor->FindComponentByClass<UTimeTravel>()!=nullptr)
 		{
-			//UE_LOG(LogTemp,Warning,TEXT("This actor is: %s"),*Actor->GetName());
 			TimeTravelActorsInWorld.Add(Actor->FindComponentByClass<UTimeTravel>());
 		}
 	}
