@@ -3,6 +3,7 @@
 
 #include "Sovrin/Public/SovrinHUD.h"
 
+#include "SovrinMenuWidget.h"
 #include "ToolBuilderUtil.h"
 #include "Engine/Canvas.h"
 #include "Engine/Font.h"
@@ -15,7 +16,7 @@
 ASovrinHUD::ASovrinHUD()
 {
 	MainHUDWidgetClass = UMainMenuWidget::StaticClass();
-	PauseMenuWidgetClass = UPauseMenuWidget::StaticClass();
+	PauseMenuWidgetClass = USovrinMenuWidget::StaticClass();
 	InitializeWidgets();
 }
 
@@ -29,7 +30,14 @@ void ASovrinHUD::BeginPlay()
 void ASovrinHUD::DrawHUD()
 {
 	Super::DrawHUD();
+	// Define button positions and dimensions
+	const FVector2D ResumeButtonPosition(400.0f, 300.0f);
+	const FVector2D OptionsButtonPosition(400.0f, 360.0f);
+	const FVector2D MainMenuButtonPosition(400.0f, 420.0f);
+	const FVector2D QuitButtonPosition(400.0f, 480.0f);
 
+	const FVector2D ButtonSize(200.0f, 40.0f);
+	
 	if (bShowCrosshair && !bIsGamePaused)
 	{
 		//DrawCrosshair();
@@ -43,6 +51,21 @@ void ASovrinHUD::DrawHUD()
 	if (bShowMiniMap && !bIsGamePaused)
 	{
 		DrawMiniMap();
+	}
+
+	if (bIsGamePaused)
+	{
+		// Draw buttons (rectangles for now)
+		DrawButton(ResumeButtonPosition, ButtonSize, FLinearColor::Green, TEXT("Resume"));
+		DrawButton(OptionsButtonPosition, ButtonSize, FLinearColor::Blue, TEXT("Options"));
+		DrawButton(MainMenuButtonPosition, ButtonSize, FLinearColor::Yellow, TEXT("Main Menu"));
+		DrawButton(QuitButtonPosition, ButtonSize, FLinearColor::Red, TEXT("Quit"));
+
+		// Add interactions (mouse click detection)
+		HandleButtonClick(ResumeButtonPosition, ButtonSize, TEXT("Resume"));
+		HandleButtonClick(OptionsButtonPosition, ButtonSize, TEXT("Options"));
+		HandleButtonClick(MainMenuButtonPosition, ButtonSize, TEXT("Main Menu"));
+		HandleButtonClick(QuitButtonPosition, ButtonSize, TEXT("Quit"));
 	}
 }
 
@@ -93,7 +116,7 @@ void ASovrinHUD::ShowPauseMenu()
 	{
 		PauseMenuWidget->AddToViewport(100); // High Z-order to appear on top
 		bIsGamePaused = true;
-		
+
 		// Pause the game
 		UGameplayStatics::SetGamePaused(GetWorld(), true);
 		
@@ -242,4 +265,64 @@ void ASovrinHUD::DrawEnemiesOnMinimap(const FVector2D& MapPosition, float MapSiz
 			EnemyDotSize, 
 			EnemyDotSize);
 	}
+}
+
+void ASovrinHUD::DrawButton(FVector2D Position, FVector2D Size, FLinearColor Color, const FString& ButtonText)
+{
+	// Draw rectangle as button background
+	DrawRect(Color, Position.X, Position.Y, Size.X, Size.Y);
+
+	// Draw button text
+	const float TextScale = 1.5f;
+	DrawText(ButtonText, FLinearColor::White, Position.X + 20.0f, Position.Y + 5.0f, nullptr, TextScale);
+}
+
+void ASovrinHUD::HandleButtonClick(FVector2D Position, FVector2D Size, const FString& ButtonIdentifier)
+{
+	if (!IsMouseClickedInRegion(Position, Size))
+	{
+		return;
+	}
+
+	if (ButtonIdentifier == "Resume")
+	{
+		UE_LOG(LogTemp, Display, TEXT("Resume Button Clicked"));
+		HidePauseMenu();
+	}
+	else if (ButtonIdentifier == "Options")
+	{
+		UE_LOG(LogTemp, Display, TEXT("Options Button Clicked"));
+		// Open options menu
+	}
+	else if (ButtonIdentifier == "Main Menu")
+	{
+		UE_LOG(LogTemp, Display, TEXT("Main Menu Button Clicked"));
+		UGameplayStatics::OpenLevel(GetWorld(), FName("MainMenuLevel"));
+	}
+	else if (ButtonIdentifier == "Quit")
+	{
+		UE_LOG(LogTemp, Display, TEXT("Quit Button Clicked"));
+		UKismetSystemLibrary::QuitGame(GetWorld(), nullptr, EQuitPreference::Quit, false);
+	}
+}
+
+bool ASovrinHUD::IsMouseClickedInRegion(FVector2D Position, FVector2D Size)
+{
+	// Access player controller
+	APlayerController* PC = GetOwningPlayerController();
+	if (!PC)
+	{
+		return false;
+	}
+
+	float MouseX, MouseY;
+	if (!PC->GetMousePosition(MouseX, MouseY))
+	{
+		return false;
+	}
+
+	// Check if mouse position is in button region
+	return (MouseX > Position.X && MouseX < Position.X + Size.X &&
+			MouseY > Position.Y && MouseY < Position.Y + Size.Y &&
+			PC->WasInputKeyJustPressed(EKeys::LeftMouseButton));
 }

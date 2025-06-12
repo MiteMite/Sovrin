@@ -60,7 +60,10 @@ protected:
 	void DrawCrosshair();
 	void DrawHealthBar();
 	void DrawMiniMap();
-
+	void DrawButton(FVector2D Position, FVector2D Size, FLinearColor Color, const FString& ButtonText);
+	void HandleButtonClick(FVector2D Position, FVector2D Size, const FString& ButtonIdentifier);
+	bool IsMouseClickedInRegion(FVector2D Position, FVector2D Size);
+	
 	// HUD Properties
 	UPROPERTY(EditAnywhere, Category = "HUD Display")
 	bool bShowCrosshair = true;
