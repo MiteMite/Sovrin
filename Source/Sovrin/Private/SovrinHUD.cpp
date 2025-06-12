@@ -56,10 +56,10 @@ void ASovrinHUD::DrawHUD()
 	if (bIsGamePaused)
 	{
 		// Draw buttons (rectangles for now)
-		DrawButton(ResumeButtonPosition, ButtonSize, FLinearColor::Green, TEXT("Resume"));
-		DrawButton(OptionsButtonPosition, ButtonSize, FLinearColor::Blue, TEXT("Options"));
-		DrawButton(MainMenuButtonPosition, ButtonSize, FLinearColor::Yellow, TEXT("Main Menu"));
-		DrawButton(QuitButtonPosition, ButtonSize, FLinearColor::Red, TEXT("Quit"));
+		DrawButton(ResumeButtonPosition, ButtonSize, FLinearColor::Gray, TEXT("Resume"));
+		DrawButton(OptionsButtonPosition, ButtonSize, FLinearColor::Gray, TEXT("Options"));
+		DrawButton(MainMenuButtonPosition, ButtonSize, FLinearColor::Gray, TEXT("Main Menu"));
+		DrawButton(QuitButtonPosition, ButtonSize, FLinearColor::Gray, TEXT("Quit"));
 
 		// Add interactions (mouse click detection)
 		HandleButtonClick(ResumeButtonPosition, ButtonSize, TEXT("Resume"));
