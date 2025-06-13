@@ -63,7 +63,5 @@ public:
 private:
 	TRingBuffer<FTransformAndVelocitySnapshot> TransformAndVelocitySnapshots;
 	TRingBuffer<FMovementVelocityAndModeSnapshot> MovementVelocityAndModeSnapshots;
-protected:
-	virtual ~UTimeTravel() override; //destructor
 };
 

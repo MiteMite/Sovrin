@@ -6,7 +6,7 @@
 #include "AIController.h"
 #include "BehaviorTree/Blackboard/BlackboardKeyType_Bool.h"
 
-UIsPlayerNOTVisibleDecorator::UIsPlayerNOTVisibleDecorator()
+UIsPlayerNOTVisibleDecorator::UIsPlayerNOTVisibleDecorator() : Super()
 {
 	NodeName = TEXT("Is Player NOT Visible");
 	bAllowAbortChildNodes = true;

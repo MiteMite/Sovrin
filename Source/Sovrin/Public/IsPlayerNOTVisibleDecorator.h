@@ -17,7 +17,6 @@ class SOVRIN_API UIsPlayerNOTVisibleDecorator : public UBTDecorator_Blackboard
 {
 	GENERATED_BODY()
 
-	
 public:
 	UIsPlayerNOTVisibleDecorator();
 	UPROPERTY(EditAnywhere, Category = "Blackboard")

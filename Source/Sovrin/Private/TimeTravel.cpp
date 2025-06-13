@@ -102,8 +102,3 @@ void UTimeTravel::PauseTime(float DeltaTime, bool bRewinding)
 {
 	
 }
-
-UTimeTravel::~UTimeTravel()
-{
-	
-}

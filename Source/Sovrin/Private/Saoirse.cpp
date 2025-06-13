@@ -1,4 +1,6 @@
 ﻿#include "Sovrin/Public/Saoirse.h"
+
+#include "EditorCategoryUtils.h"
 #include "InputMappingContext.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
@@ -112,11 +114,13 @@ void ASaoirse::BeginPlay()
 void ASaoirse::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	if (UEnhancedInputComponent* Input = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
+	Input = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
+	if (Input)
 	{
 		Input->BindAction(InputForwardAction,ETriggerEvent::Triggered, this, &ASaoirse::MoveForward);
+		Input->BindAction(InputForwardAction,ETriggerEvent::Completed, this, &ASaoirse::MoveForwardCompleted);
 		Input->BindAction(InputRightAction,ETriggerEvent::Triggered, this, &ASaoirse::MoveRight);
+		Input->BindAction(InputRightAction,ETriggerEvent::Completed, this, &ASaoirse::MoveRightCompleted);
 		Input->BindAction(InputRewind,ETriggerEvent::Started, this, &ASaoirse::RewindTime);
 		Input->BindAction(InputRewind,ETriggerEvent::Completed, this, &ASaoirse::RewindTime);
 		Input->BindAction(InputCrouch,ETriggerEvent::Started, this, &ASaoirse::CrouchProne);
@@ -135,90 +139,152 @@ void ASaoirse::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 {
 	float InputValue = Inst.GetValue().Get<float>();
-
+	CurrentForwardInput = InputValue;
+	FVector TraceStartingPoint = GetActorLocation();
+	FVector TraceEndPoint = FVector::ZeroVector; //short range
 	//no movement in first person mode
-	if (!bIsFirstPersonMode)
+	if (!bIsFirstPersonMode && InputValue!=0.0f)
 	{
-		if (InputValue!=0.0f)
+		FVector MovementDirection;
+
+		//Calculate movement direction based on camera orientation
+		if (Camera)
 		{
-			FVector MovementDirection;
-			if (bIsFirstPersonMode)
-			{
-				if (Controller)
-				{
-					FRotator ControlRotation = Controller->GetControlRotation();
-					MovementDirection = FRotationMatrix(FRotator(0.0f,ControlRotation.Yaw,0.0f)).GetUnitAxis(EAxis::X);
-				}
-			}
-			else
-			{
-				if (Camera)
-				{
-					FVector CameraForward = Camera->GetForwardVector();
-					//Project Camera forward onto the ground plane
-					MovementDirection = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
-
-					if (MovementDirection.IsNearlyZero())
-					{
-						MovementDirection = this->GetActorForwardVector();
-					}
-				}
-				else
-				{
-					MovementDirection = FVector::ForwardVector; // world fallback
-				}
-			}
-		
-			AddMovementInput(MovementDirection, InputValue);
-
+			FVector CameraForward = Camera->GetForwardVector();
+			//Project Camera forward onto the ground plane
+			MovementDirection = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
 		}
-	}
+		else
+		{
+			MovementDirection = FVector::ForwardVector; // world fallback
+		}
 
+		TraceEndPoint = TraceStartingPoint + (MovementDirection * 100.0f); //short range
+
+		//Perform line trace
+		FHitResult HitResult;
+		FCollisionQueryParams LineTraceParameters;
+		LineTraceParameters.AddIgnoredActor(this);
+
+		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, TraceStartingPoint, TraceEndPoint, ECC_Visibility, LineTraceParameters);
+
+		// Debug: Draw the trace line
+		FColor LineColor = bHit ? FColor::Red : FColor::Green; // Red = hit, Green = no hit
+		DrawDebugLine(GetWorld(), TraceStartingPoint, TraceEndPoint, LineColor, false, 1.0f, 0, 2.0f);
+		
+		if (bHit)
+		{
+			// Compute the Dot Product between movement direction and wall normal
+			float DotProduct = FVector::DotProduct(HitResult.Normal, MovementDirection);
+			
+			if (DotProduct < 0.0f) // Input moving *toward* the wall
+			{
+				if (!bIsInCoverState) EnterCoverState(); //enter cover state
+				// Slide along the wall
+				FVector SlideDirection = FVector::VectorPlaneProject(MovementDirection, HitResult.Normal);
+				AddMovementInput(SlideDirection, InputValue);
+				return;
+			}
+			if (DotProduct > 0.0f) // Input moving *away* from the wall
+			{
+				// Unstick: Allow free movement
+				if (bIsInCoverState) ExitCoverState(); //exit cover state
+				AddMovementInput(MovementDirection, InputValue);
+				return;
+			}
+		}
+		else
+		{
+			if (bIsInCoverState) ExitCoverState(); //exit cover state if no wall is hit
+		}
+		AddMovementInput(MovementDirection, InputValue);
+	}
+	else
+	{
+		// Clear input when not moving or in first person mode
+		CurrentRightInput = 0.0f;
+	}
 }
 
 void ASaoirse::MoveRight(const FInputActionInstance& Inst)
 {
 	float InputValue = Inst.GetValue().Get<float>();
-
-	//no movement in first person mode
-	if (!bIsFirstPersonMode)
+	CurrentRightInput = InputValue;
+	if (!bIsFirstPersonMode && InputValue!=0.0f)
 	{
-		if (InputValue!=0.0f)
+		FVector MovementDirection;
+		if (bIsFirstPersonMode)
 		{
-			FVector MovementDirection;
-			if (bIsFirstPersonMode)
+			if (Controller)
 			{
-				if (Controller)
+				FRotator ControlRotation = Controller->GetControlRotation();
+				MovementDirection = FRotationMatrix(FRotator(0.0f,ControlRotation.Yaw,0.0f)).GetUnitAxis(EAxis::Y);
+			}
+		}
+		else
+		{
+			if (Camera)
+			{
+				FVector CameraForward = Camera->GetRightVector();
+				//Project Camera forward onto the ground plane
+				MovementDirection = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
+
+				if (MovementDirection.IsNearlyZero())
 				{
-					FRotator ControlRotation = Controller->GetControlRotation();
-					MovementDirection = FRotationMatrix(FRotator(0.0f,ControlRotation.Yaw,0.0f)).GetUnitAxis(EAxis::Y);
+					MovementDirection = this->GetActorRightVector();
 				}
 			}
 			else
 			{
-				if (Camera)
-				{
-					FVector CameraForward = Camera->GetRightVector();
-					//Project Camera forward onto the ground plane
-					MovementDirection = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
-
-					if (MovementDirection.IsNearlyZero())
-					{
-						MovementDirection = this->GetActorRightVector();
-					}
-				}
-				else
-				{
-					MovementDirection = FVector::RightVector; // world fallback
-				}
+				MovementDirection = FVector::RightVector; // world fallback
 			}
-		
-			AddMovementInput(MovementDirection, InputValue);
-		
 		}
-	}
-	
+		FVector TraceStartingPoint = GetActorLocation();
+		FVector TraceEndPoint = TraceStartingPoint + (MovementDirection * 100.0f); //short range
 
+		//Perform line trace
+		FHitResult HitResult;
+		FCollisionQueryParams LineTraceParameters;
+		LineTraceParameters.AddIgnoredActor(this);
+
+		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, TraceStartingPoint, TraceEndPoint, ECC_Visibility, LineTraceParameters);
+
+		// Debug: Draw the trace line
+		FColor LineColor = bHit ? FColor::Red : FColor::Green; // Red = hit, Green = no hit
+		DrawDebugLine(GetWorld(), TraceStartingPoint, TraceEndPoint, LineColor, false, 1.0f, 0, 2.0f);
+
+		if (bHit)
+		{
+			// Compute the Dot Product between movement direction and wall normal
+			float DotProduct = FVector::DotProduct(HitResult.Normal, MovementDirection);
+			
+			if (DotProduct < 0.0f) // Input moving *toward* the wall
+			{
+				if (!bIsInCoverState) EnterCoverState(); //enter cover state
+				// Slide along the wall
+				FVector SlideDirection = FVector::VectorPlaneProject(MovementDirection, HitResult.Normal);
+				AddMovementInput(SlideDirection, InputValue);
+				return;
+			}
+			if (DotProduct > 0.0f) // Input moving *away* from the wall
+			{
+				// Unstick: Allow free movement
+				if (bIsInCoverState) ExitCoverState(); //exit cover state
+				AddMovementInput(MovementDirection, InputValue);
+				return;
+			}
+		}
+		else
+		{
+			if (bIsInCoverState) ExitCoverState(); //exit cover state if no wall is hit
+		}
+		AddMovementInput(MovementDirection, InputValue);
+	}
+	else
+	{
+		// Clear input when not moving or in first person mode
+		CurrentRightInput = 0.0f;
+	}
 }
 
 void ASaoirse::CrouchProne(const FInputActionInstance& Inst)
@@ -370,22 +436,36 @@ void ASaoirse::UpdateRotationBasedOnMovement()
 {
 	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
 	{
-		FVector CurrentVelocity = GetCharacterMovement()->Velocity;
-		
-		if (CurrentVelocity.Size() > 0.1f)
+		FVector ForwardInput = CurrentForwardInput * FVector::ForwardVector;
+		FVector RightInput = CurrentRightInput * FVector::RightVector;
+
+		FVector InputDirection = FVector::CrossProduct(ForwardInput, RightInput).GetSafeNormal();
+
+		if (InputDirection.Size()>=0.01f)
 		{
+			FVector CameraForward = Camera->GetForwardVector();
+			FVector CameraRight = Camera->GetRightVector();
+
+			FVector CameraForwardGrounded = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
+			FVector CameraRightGrounded = FVector(CameraRight.X, CameraRight.Y, 0.0f).GetSafeNormal();
 			
-			FVector MovementDirection = FVector(CurrentVelocity.X, CurrentVelocity.Y, 0.0f).GetSafeNormal();
-			FRotator TargetRotation = MovementDirection.Rotation();
-			FRotator CurrentRotation = GetActorRotation();
-			FRotator NewRotation = FRotator(CurrentRotation.Pitch, TargetRotation.Yaw, CurrentRotation.Roll);
-			LastKnownCameraRotation = NewRotation;
-			SetActorRotation(NewRotation);
+			FVector WorldDirection = ((CameraForwardGrounded * CurrentForwardInput) + (CameraRightGrounded * CurrentRightInput));
+			WorldDirection = WorldDirection.GetSafeNormal();
+
+			if (WorldDirection.Size()>=0.01f)
+			{
+				FRotator TargetRotation = WorldDirection.Rotation();
+				FRotator CurrentRotation = GetActorRotation();
+				FRotator NewRotation = FRotator(CurrentRotation.Pitch, TargetRotation.Yaw, CurrentRotation.Roll);
+				LastKnownCameraRotation = NewRotation;
+				SetActorRotation(NewRotation);
+			}
 		}
-		else
-		{
-			SetActorRotation(LastKnownCameraRotation);
-		}
+	}
+	else
+	{
+		//No input detected so maintain previous rotation
+		SetActorRotation(LastKnownCameraRotation);
 	}
 }
 
@@ -409,6 +489,26 @@ void ASaoirse::TogglePauseMenu(const FInputActionInstance& Inst)
 			UE_LOG(LogTemp, Warning, TEXT("No player controller found"));
 		}
 	}
+}
+
+void ASaoirse::EnterCoverState()
+{
+	bIsInCoverState = true;
+}
+
+void ASaoirse::ExitCoverState()
+{
+	bIsInCoverState = false;
+}
+
+void ASaoirse::MoveForwardCompleted(const FInputActionInstance& Inst)
+{
+	CurrentForwardInput = 0.0f;
+}
+
+void ASaoirse::MoveRightCompleted(const FInputActionInstance& Inst)
+{
+	CurrentRightInput = 0.0f;
 }
 
 ASaoirse::~ASaoirse()

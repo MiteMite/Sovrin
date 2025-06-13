@@ -36,6 +36,11 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UAIPerceptionStimuliSourceComponent* StimuliSource;
 private:
+	bool bIsInCoverState = false; //tracks if character is currently in cover
+
+	void EnterCoverState();
+	void ExitCoverState();
+	
 	UFUNCTION()
 	void UpdateRotationBasedOnMovement();
 	
@@ -61,6 +66,11 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Camera", meta = (ClampMin = "0.0", ClampMax = "90"))
 	float FirstPersonPitchMax = 90.0f;
 
+	//Input variables
+	
+	float CurrentForwardInput = 0.0f;
+	float CurrentRightInput = 0.0f;
+
 	//Input functions
 	void MoveForward(const FInputActionInstance& Inst);
 	void MoveRight(const FInputActionInstance& Inst);
@@ -71,9 +81,15 @@ private:
 	void FirstPersonLook(const FInputActionInstance& Inst);
 	UFUNCTION()
 	void TogglePauseMenu(const FInputActionInstance& Inst);
+	void MoveForwardCompleted(const FInputActionInstance& Inst);
+	void MoveRightCompleted(const FInputActionInstance& Inst);
+
 	
 protected:
 	virtual ~ASaoirse() override;
+
+	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+	UEnhancedInputComponent* Input;
 	
 	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
 	class UInputMappingContext* InputMapping;
