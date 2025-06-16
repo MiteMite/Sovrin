@@ -36,11 +36,6 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components")
 	UAIPerceptionStimuliSourceComponent* StimuliSource;
 private:
-	bool bIsInCoverState = false; //tracks if character is currently in cover
-
-	void EnterCoverState();
-	void ExitCoverState();
-	
 	UFUNCTION()
 	void UpdateRotationBasedOnMovement();
 	
@@ -67,9 +62,10 @@ private:
 	float FirstPersonPitchMax = 90.0f;
 
 	//Input variables
-	
+	bool bIsInCoverState = false; //tracks if character is currently in cover
 	float CurrentForwardInput = 0.0f;
 	float CurrentRightInput = 0.0f;
+	FVector CoverWallNormal = FVector::ZeroVector; // Store the wall normal when in cover
 
 	//Input functions
 	void MoveForward(const FInputActionInstance& Inst);
@@ -79,6 +75,8 @@ private:
 	void StartFirstPersonMode(const FInputActionInstance& Inst);
 	void StopFirstPersonMode(const FInputActionInstance& Inst);
 	void FirstPersonLook(const FInputActionInstance& Inst);
+	void EnterCoverState();
+	void ExitCoverState();
 	UFUNCTION()
 	void TogglePauseMenu(const FInputActionInstance& Inst);
 	void MoveForwardCompleted(const FInputActionInstance& Inst);

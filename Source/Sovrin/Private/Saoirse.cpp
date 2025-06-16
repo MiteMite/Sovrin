@@ -150,8 +150,8 @@ void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 		//Calculate movement direction based on camera orientation
 		if (Camera)
 		{
+			// Get camera's forward vector and project it onto the horizontal plane
 			FVector CameraForward = Camera->GetForwardVector();
-			//Project Camera forward onto the ground plane
 			MovementDirection = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
 		}
 		else
@@ -159,7 +159,36 @@ void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 			MovementDirection = FVector::ForwardVector; // world fallback
 		}
 
-		TraceEndPoint = TraceStartingPoint + (MovementDirection * 100.0f); //short range
+		// If in cover state, check if input is pointing away from wall
+		if (bIsInCoverState && !CoverWallNormal.IsZero())
+		{
+			// Check if input direction aligns with opposite wall normal (away from wall)
+			float DotWithOppositeNormal = FVector::DotProduct(MovementDirection * InputValue, CoverWallNormal);
+			
+			if (DotWithOppositeNormal > 0.5f) // Input pointing away from wall with sufficient strength
+			{
+				// Exit cover and allow normal movement
+				CoverWallNormal = FVector::ZeroVector;
+				ExitCoverState();
+				AddMovementInput(MovementDirection, InputValue);
+				return;
+			}
+			
+			// Otherwise, restrict movement to sideways only
+			FVector SidewaysDirection = FVector::CrossProduct(CoverWallNormal, FVector::UpVector).GetSafeNormal();
+			float SidewaysInput = FVector::DotProduct(MovementDirection, SidewaysDirection) * InputValue;
+			AddMovementInput(SidewaysDirection, SidewaysInput);
+			return;
+		}
+
+		// Calculate the actual movement direction considering both inputs
+		FVector CameraRight = Camera ? Camera->GetRightVector() : FVector::RightVector;
+		FVector CameraRightGrounded = FVector(CameraRight.X, CameraRight.Y, 0.0f).GetSafeNormal();
+		
+		FVector ActualMovementDirection = (MovementDirection * CurrentForwardInput) + (CameraRightGrounded * CurrentRightInput);
+		ActualMovementDirection = ActualMovementDirection.GetSafeNormal();
+
+		TraceEndPoint = TraceStartingPoint + (ActualMovementDirection * 100.0f); //short range
 
 		//Perform line trace
 		FHitResult HitResult;
@@ -175,34 +204,36 @@ void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 		if (bHit)
 		{
 			// Compute the Dot Product between movement direction and wall normal
-			float DotProduct = FVector::DotProduct(HitResult.Normal, MovementDirection);
+			float DotProduct = FVector::DotProduct(HitResult.Normal, ActualMovementDirection);
 			
 			if (DotProduct < 0.0f) // Input moving *toward* the wall
 			{
-				if (!bIsInCoverState) EnterCoverState(); //enter cover state
+				if (!bIsInCoverState) 
+				{
+					CoverWallNormal = HitResult.Normal; // Store wall normal
+					EnterCoverState(); //enter cover state
+				}
 				// Slide along the wall
-				FVector SlideDirection = FVector::VectorPlaneProject(MovementDirection, HitResult.Normal);
+				FVector SlideDirection = FVector::VectorPlaneProject(ActualMovementDirection, HitResult.Normal);
 				AddMovementInput(SlideDirection, InputValue);
-				return;
-			}
-			if (DotProduct > 0.0f) // Input moving *away* from the wall
-			{
-				// Unstick: Allow free movement
-				if (bIsInCoverState) ExitCoverState(); //exit cover state
-				AddMovementInput(MovementDirection, InputValue);
 				return;
 			}
 		}
 		else
 		{
-			if (bIsInCoverState) ExitCoverState(); //exit cover state if no wall is hit
+			// Only exit cover if we're moving away from where the wall was
+			if (bIsInCoverState)
+			{
+				CoverWallNormal = FVector::ZeroVector; // Clear wall normal
+				ExitCoverState();
+			}
 		}
 		AddMovementInput(MovementDirection, InputValue);
 	}
 	else
 	{
 		// Clear input when not moving or in first person mode
-		CurrentRightInput = 0.0f;
+		CurrentForwardInput = 0.0f;
 	}
 }
 
@@ -213,34 +244,50 @@ void ASaoirse::MoveRight(const FInputActionInstance& Inst)
 	if (!bIsFirstPersonMode && InputValue!=0.0f)
 	{
 		FVector MovementDirection;
-		if (bIsFirstPersonMode)
+		
+		// Calculate movement direction based on camera orientation
+		if (Camera)
 		{
-			if (Controller)
-			{
-				FRotator ControlRotation = Controller->GetControlRotation();
-				MovementDirection = FRotationMatrix(FRotator(0.0f,ControlRotation.Yaw,0.0f)).GetUnitAxis(EAxis::Y);
-			}
+			// Get camera's right vector and project it onto the horizontal plane
+			FVector CameraRight = Camera->GetRightVector();
+			MovementDirection = FVector(CameraRight.X, CameraRight.Y, 0.0f).GetSafeNormal();
 		}
 		else
 		{
-			if (Camera)
-			{
-				FVector CameraForward = Camera->GetRightVector();
-				//Project Camera forward onto the ground plane
-				MovementDirection = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
-
-				if (MovementDirection.IsNearlyZero())
-				{
-					MovementDirection = this->GetActorRightVector();
-				}
-			}
-			else
-			{
-				MovementDirection = FVector::RightVector; // world fallback
-			}
+			MovementDirection = FVector::RightVector; // world fallback
 		}
+
+		// If in cover state, check if input is pointing away from wall
+		if (bIsInCoverState && !CoverWallNormal.IsZero())
+		{
+			// Check if input direction aligns with opposite wall normal (away from wall)
+			float DotWithOppositeNormal = FVector::DotProduct(MovementDirection * InputValue, CoverWallNormal);
+			
+			if (DotWithOppositeNormal > 0.5f) // Input pointing away from wall with sufficient strength
+			{
+				// Exit cover and allow normal movement
+				CoverWallNormal = FVector::ZeroVector;
+				ExitCoverState();
+				AddMovementInput(MovementDirection, InputValue);
+				return;
+			}
+			
+			// Otherwise, restrict movement to sideways only
+			FVector SidewaysDirection = FVector::CrossProduct(CoverWallNormal, FVector::UpVector).GetSafeNormal();
+			float SidewaysInput = FVector::DotProduct(MovementDirection, SidewaysDirection) * InputValue;
+			AddMovementInput(SidewaysDirection, SidewaysInput);
+			return;
+		}
+
+		// Calculate the actual movement direction considering both inputs
+		FVector CameraForward = Camera ? Camera->GetForwardVector() : FVector::ForwardVector;
+		FVector CameraForwardGrounded = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
+		
+		FVector ActualMovementDirection = (CameraForwardGrounded * CurrentForwardInput) + (MovementDirection * CurrentRightInput);
+		ActualMovementDirection = ActualMovementDirection.GetSafeNormal();
+		
 		FVector TraceStartingPoint = GetActorLocation();
-		FVector TraceEndPoint = TraceStartingPoint + (MovementDirection * 100.0f); //short range
+		FVector TraceEndPoint = TraceStartingPoint + (ActualMovementDirection * 100.0f); //short range
 
 		//Perform line trace
 		FHitResult HitResult;
@@ -256,27 +303,29 @@ void ASaoirse::MoveRight(const FInputActionInstance& Inst)
 		if (bHit)
 		{
 			// Compute the Dot Product between movement direction and wall normal
-			float DotProduct = FVector::DotProduct(HitResult.Normal, MovementDirection);
+			float DotProduct = FVector::DotProduct(HitResult.Normal, ActualMovementDirection);
 			
 			if (DotProduct < 0.0f) // Input moving *toward* the wall
 			{
-				if (!bIsInCoverState) EnterCoverState(); //enter cover state
+				if (!bIsInCoverState) 
+				{
+					CoverWallNormal = HitResult.Normal; // Store wall normal
+					EnterCoverState(); //enter cover state
+				}
 				// Slide along the wall
-				FVector SlideDirection = FVector::VectorPlaneProject(MovementDirection, HitResult.Normal);
+				FVector SlideDirection = FVector::VectorPlaneProject(ActualMovementDirection, HitResult.Normal);
 				AddMovementInput(SlideDirection, InputValue);
-				return;
-			}
-			if (DotProduct > 0.0f) // Input moving *away* from the wall
-			{
-				// Unstick: Allow free movement
-				if (bIsInCoverState) ExitCoverState(); //exit cover state
-				AddMovementInput(MovementDirection, InputValue);
 				return;
 			}
 		}
 		else
 		{
-			if (bIsInCoverState) ExitCoverState(); //exit cover state if no wall is hit
+			// Only exit cover if we're moving away from where the wall was
+			if (bIsInCoverState)
+			{
+				CoverWallNormal = FVector::ZeroVector; // Clear wall normal
+				ExitCoverState();
+			}
 		}
 		AddMovementInput(MovementDirection, InputValue);
 	}
@@ -286,6 +335,11 @@ void ASaoirse::MoveRight(const FInputActionInstance& Inst)
 		CurrentRightInput = 0.0f;
 	}
 }
+
+
+
+
+
 
 void ASaoirse::CrouchProne(const FInputActionInstance& Inst)
 {
@@ -436,36 +490,32 @@ void ASaoirse::UpdateRotationBasedOnMovement()
 {
 	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
 	{
-		FVector ForwardInput = CurrentForwardInput * FVector::ForwardVector;
-		FVector RightInput = CurrentRightInput * FVector::RightVector;
-
-		FVector InputDirection = FVector::CrossProduct(ForwardInput, RightInput).GetSafeNormal();
-
-		if (InputDirection.Size()>=0.01f)
+		// Get the character's current velocity
+		FVector CurrentVelocity = GetCharacterMovement()->Velocity;
+		
+		// Project velocity onto the ground plane (ignore Z component)
+		FVector GroundVelocity = FVector(CurrentVelocity.X, CurrentVelocity.Y, 0.0f);
+		
+		// Check if we're moving fast enough to warrant rotation
+		if (GroundVelocity.Size() >= 10.0f) // Minimum speed threshold
 		{
-			FVector CameraForward = Camera->GetForwardVector();
-			FVector CameraRight = Camera->GetRightVector();
-
-			FVector CameraForwardGrounded = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
-			FVector CameraRightGrounded = FVector(CameraRight.X, CameraRight.Y, 0.0f).GetSafeNormal();
+			// Get the direction of movement
+			FVector MovementDirection = GroundVelocity.GetSafeNormal();
 			
-			FVector WorldDirection = ((CameraForwardGrounded * CurrentForwardInput) + (CameraRightGrounded * CurrentRightInput));
-			WorldDirection = WorldDirection.GetSafeNormal();
-
-			if (WorldDirection.Size()>=0.01f)
-			{
-				FRotator TargetRotation = WorldDirection.Rotation();
-				FRotator CurrentRotation = GetActorRotation();
-				FRotator NewRotation = FRotator(CurrentRotation.Pitch, TargetRotation.Yaw, CurrentRotation.Roll);
-				LastKnownCameraRotation = NewRotation;
-				SetActorRotation(NewRotation);
-			}
+			// Calculate target rotation based on velocity direction
+			FRotator TargetRotation = MovementDirection.Rotation();
+			FRotator CurrentRotation = GetActorRotation();
+			FRotator NewRotation = FRotator(CurrentRotation.Pitch, TargetRotation.Yaw, CurrentRotation.Roll);
+			
+			// Store and apply the new rotation
+			LastKnownCameraRotation = NewRotation;
+			SetActorRotation(NewRotation);
 		}
-	}
-	else
-	{
-		//No input detected so maintain previous rotation
-		SetActorRotation(LastKnownCameraRotation);
+		else
+		{
+			// No significant movement, maintain previous rotation
+			SetActorRotation(LastKnownCameraRotation);
+		}
 	}
 }
 
@@ -493,11 +543,13 @@ void ASaoirse::TogglePauseMenu(const FInputActionInstance& Inst)
 
 void ASaoirse::EnterCoverState()
 {
+	UE_LOG(LogTemp, Display, TEXT("Entering cover state"));
 	bIsInCoverState = true;
 }
 
 void ASaoirse::ExitCoverState()
 {
+	UE_LOG(LogTemp, Display, TEXT("Exiting cover state"));
 	bIsInCoverState = false;
 }
 
