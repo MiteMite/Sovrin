@@ -50,6 +50,15 @@ private:
 	FVector DefaultRelativeLocation = FVector(0.0f, 0.0f, 50.0f);	//camera is 50 units above the character
 	FRotator DefaultRelativeRotation = FRotator(-60.0f, 180.0f, 0.0f); //Looks down 60 degrees, and is rotated 180 degrees around the Y axis
 	FRotator LastKnownCameraRotation = FRotator::ZeroRotator;
+	
+	// Cover camera settings
+	float CoverTargetArmLength = 300.0f;  // Closer to character in cover
+	FVector CoverRelativeLocation = FVector(0.0f, 0.0f, 20.0f);  // Lower, near ground level
+	FRotator CoverRelativeRotation = FRotator(-10.0f, 180.0f, 0.0f);  // Nearly horizontal, looking at character
+
+	//Cover camera functions
+
+	void CameraAdjustToGroundLevel(float DeltaSeconds);
 
 	//Mouse sensitivity settings
 	UPROPERTY(EditAnywhere, Category = "Camera", meta = (ClampMin = "0.1", ClampMax = "5.0"))
@@ -66,6 +75,14 @@ private:
 	float CurrentForwardInput = 0.0f;
 	float CurrentRightInput = 0.0f;
 	FVector CoverWallNormal = FVector::ZeroVector; // Store the wall normal when in cover
+	
+	// Edge detection parameters
+	float EdgeDetectionDistance = 50.0f; // How far ahead to check for wall edges
+	float EdgeDetectionHeight = 50.0f; // Height offset for edge detection traces
+
+	// Edge detection function
+	UFUNCTION()
+	bool IsWallEdgeDetected(const FVector& Direction);
 
 	//Input functions
 	void MoveForward(const FInputActionInstance& Inst);

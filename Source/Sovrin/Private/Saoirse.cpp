@@ -91,10 +91,9 @@ void ASaoirse::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	if (!bIsFirstPersonMode)
-	{
-		UpdateRotationBasedOnMovement();
-	}
+	CameraAdjustToGroundLevel(DeltaSeconds);
+	
+	UpdateRotationBasedOnMovement();
 }
 
 void ASaoirse::BeginPlay()
@@ -177,43 +176,54 @@ void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 			// Otherwise, restrict movement to sideways only
 			FVector SidewaysDirection = FVector::CrossProduct(CoverWallNormal, FVector::UpVector).GetSafeNormal();
 			float SidewaysInput = FVector::DotProduct(MovementDirection, SidewaysDirection) * InputValue;
+			
+			// Check for wall edge in the sideways movement direction
+			if (SidewaysInput != 0.0f)
+			{
+				FVector IntendedDirection = SidewaysDirection * FMath::Sign(SidewaysInput);
+				FVector EdgeCheckDirection = IntendedDirection * EdgeDetectionDistance;
+				
+				if (IsWallEdgeDetected(EdgeCheckDirection))
+				{
+					// Edge detected, block movement in this direction
+					UE_LOG(LogTemp, Warning, TEXT("Wall edge detected - blocking movement"));
+					return;
+				}
+			}
+			
 			AddMovementInput(SidewaysDirection, SidewaysInput);
 			return;
 		}
 
-		// Calculate the actual movement direction considering both inputs
+		// Normal movement logic continues...
 		FVector CameraRight = Camera ? Camera->GetRightVector() : FVector::RightVector;
 		FVector CameraRightGrounded = FVector(CameraRight.X, CameraRight.Y, 0.0f).GetSafeNormal();
 		
 		FVector ActualMovementDirection = (MovementDirection * CurrentForwardInput) + (CameraRightGrounded * CurrentRightInput);
 		ActualMovementDirection = ActualMovementDirection.GetSafeNormal();
 
-		TraceEndPoint = TraceStartingPoint + (ActualMovementDirection * 100.0f); //short range
+		TraceEndPoint = TraceStartingPoint + (ActualMovementDirection * 100.0f);
 
-		//Perform line trace
 		FHitResult HitResult;
 		FCollisionQueryParams LineTraceParameters;
 		LineTraceParameters.AddIgnoredActor(this);
 
 		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, TraceStartingPoint, TraceEndPoint, ECC_Visibility, LineTraceParameters);
 
-		// Debug: Draw the trace line
-		FColor LineColor = bHit ? FColor::Red : FColor::Green; // Red = hit, Green = no hit
+		FColor LineColor = bHit ? FColor::Red : FColor::Green;
 		DrawDebugLine(GetWorld(), TraceStartingPoint, TraceEndPoint, LineColor, false, 1.0f, 0, 2.0f);
 		
 		if (bHit)
 		{
-			// Compute the Dot Product between movement direction and wall normal
 			float DotProduct = FVector::DotProduct(HitResult.Normal, ActualMovementDirection);
 			
-			if (DotProduct < 0.0f) // Input moving *toward* the wall
+			if (DotProduct < 0.0f)
 			{
 				if (!bIsInCoverState) 
 				{
-					CoverWallNormal = HitResult.Normal; // Store wall normal
-					EnterCoverState(); //enter cover state
+					CoverWallNormal = HitResult.Normal;
+					EnterCoverState();
 				}
-				// Slide along the wall
 				FVector SlideDirection = FVector::VectorPlaneProject(ActualMovementDirection, HitResult.Normal);
 				AddMovementInput(SlideDirection, InputValue);
 				return;
@@ -221,10 +231,9 @@ void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 		}
 		else
 		{
-			// Only exit cover if we're moving away from where the wall was
 			if (bIsInCoverState)
 			{
-				CoverWallNormal = FVector::ZeroVector; // Clear wall normal
+				CoverWallNormal = FVector::ZeroVector;
 				ExitCoverState();
 			}
 		}
@@ -232,7 +241,6 @@ void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 	}
 	else
 	{
-		// Clear input when not moving or in first person mode
 		CurrentForwardInput = 0.0f;
 	}
 }
@@ -245,27 +253,23 @@ void ASaoirse::MoveRight(const FInputActionInstance& Inst)
 	{
 		FVector MovementDirection;
 		
-		// Calculate movement direction based on camera orientation
 		if (Camera)
 		{
-			// Get camera's right vector and project it onto the horizontal plane
 			FVector CameraRight = Camera->GetRightVector();
 			MovementDirection = FVector(CameraRight.X, CameraRight.Y, 0.0f).GetSafeNormal();
 		}
 		else
 		{
-			MovementDirection = FVector::RightVector; // world fallback
+			MovementDirection = FVector::RightVector;
 		}
 
 		// If in cover state, check if input is pointing away from wall
 		if (bIsInCoverState && !CoverWallNormal.IsZero())
 		{
-			// Check if input direction aligns with opposite wall normal (away from wall)
 			float DotWithOppositeNormal = FVector::DotProduct(MovementDirection * InputValue, CoverWallNormal);
 			
-			if (DotWithOppositeNormal > 0.5f) // Input pointing away from wall with sufficient strength
+			if (DotWithOppositeNormal > 0.5f)
 			{
-				// Exit cover and allow normal movement
 				CoverWallNormal = FVector::ZeroVector;
 				ExitCoverState();
 				AddMovementInput(MovementDirection, InputValue);
@@ -275,11 +279,26 @@ void ASaoirse::MoveRight(const FInputActionInstance& Inst)
 			// Otherwise, restrict movement to sideways only
 			FVector SidewaysDirection = FVector::CrossProduct(CoverWallNormal, FVector::UpVector).GetSafeNormal();
 			float SidewaysInput = FVector::DotProduct(MovementDirection, SidewaysDirection) * InputValue;
+			
+			// Check for wall edge in the sideways movement direction
+			if (SidewaysInput != 0.0f)
+			{
+				FVector IntendedDirection = SidewaysDirection * FMath::Sign(SidewaysInput);
+				FVector EdgeCheckDirection = IntendedDirection * EdgeDetectionDistance;
+				
+				if (IsWallEdgeDetected(EdgeCheckDirection))
+				{
+					// Edge detected, block movement in this direction
+					UE_LOG(LogTemp, Warning, TEXT("Wall edge detected - blocking movement"));
+					return;
+				}
+			}
+			
 			AddMovementInput(SidewaysDirection, SidewaysInput);
 			return;
 		}
 
-		// Calculate the actual movement direction considering both inputs
+		// Normal movement logic continues...
 		FVector CameraForward = Camera ? Camera->GetForwardVector() : FVector::ForwardVector;
 		FVector CameraForwardGrounded = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
 		
@@ -287,32 +306,28 @@ void ASaoirse::MoveRight(const FInputActionInstance& Inst)
 		ActualMovementDirection = ActualMovementDirection.GetSafeNormal();
 		
 		FVector TraceStartingPoint = GetActorLocation();
-		FVector TraceEndPoint = TraceStartingPoint + (ActualMovementDirection * 100.0f); //short range
+		FVector TraceEndPoint = TraceStartingPoint + (ActualMovementDirection * 100.0f);
 
-		//Perform line trace
 		FHitResult HitResult;
 		FCollisionQueryParams LineTraceParameters;
 		LineTraceParameters.AddIgnoredActor(this);
 
 		bool bHit = GetWorld()->LineTraceSingleByChannel(HitResult, TraceStartingPoint, TraceEndPoint, ECC_Visibility, LineTraceParameters);
 
-		// Debug: Draw the trace line
-		FColor LineColor = bHit ? FColor::Red : FColor::Green; // Red = hit, Green = no hit
+		FColor LineColor = bHit ? FColor::Red : FColor::Green;
 		DrawDebugLine(GetWorld(), TraceStartingPoint, TraceEndPoint, LineColor, false, 1.0f, 0, 2.0f);
 
 		if (bHit)
 		{
-			// Compute the Dot Product between movement direction and wall normal
 			float DotProduct = FVector::DotProduct(HitResult.Normal, ActualMovementDirection);
 			
-			if (DotProduct < 0.0f) // Input moving *toward* the wall
+			if (DotProduct < 0.0f)
 			{
 				if (!bIsInCoverState) 
 				{
-					CoverWallNormal = HitResult.Normal; // Store wall normal
-					EnterCoverState(); //enter cover state
+					CoverWallNormal = HitResult.Normal;
+					EnterCoverState();
 				}
-				// Slide along the wall
 				FVector SlideDirection = FVector::VectorPlaneProject(ActualMovementDirection, HitResult.Normal);
 				AddMovementInput(SlideDirection, InputValue);
 				return;
@@ -320,10 +335,9 @@ void ASaoirse::MoveRight(const FInputActionInstance& Inst)
 		}
 		else
 		{
-			// Only exit cover if we're moving away from where the wall was
 			if (bIsInCoverState)
 			{
-				CoverWallNormal = FVector::ZeroVector; // Clear wall normal
+				CoverWallNormal = FVector::ZeroVector;
 				ExitCoverState();
 			}
 		}
@@ -331,10 +345,10 @@ void ASaoirse::MoveRight(const FInputActionInstance& Inst)
 	}
 	else
 	{
-		// Clear input when not moving or in first person mode
 		CurrentRightInput = 0.0f;
 	}
 }
+
 
 
 
@@ -545,12 +559,48 @@ void ASaoirse::EnterCoverState()
 {
 	UE_LOG(LogTemp, Display, TEXT("Entering cover state"));
 	bIsInCoverState = true;
+
+	// Adjust camera for cover state
+	if (SpringCam && Camera)
+	{
+		// Store current camera settings before changing them
+		if (!bIsFirstPersonMode)
+		{
+			DefaultTargetArmLength = SpringCam->TargetArmLength;
+			DefaultRelativeLocation = SpringCam->GetRelativeLocation();
+			DefaultRelativeRotation = SpringCam->GetRelativeRotation();
+		}
+		
+		// Set cover camera position - ground level and looking at character
+		SpringCam->TargetArmLength = CoverTargetArmLength;
+		SpringCam->SetRelativeLocation(CoverRelativeLocation);
+		SpringCam->SetRelativeRotation(CoverRelativeRotation);
+		
+		// Optionally disable camera lag for immediate response in cover
+		SpringCam->bEnableCameraLag = false;
+	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("Entered Cover State - Camera adjusted to ground level"));
 }
 
 void ASaoirse::ExitCoverState()
 {
 	UE_LOG(LogTemp, Display, TEXT("Exiting cover state"));
 	bIsInCoverState = false;
+
+	// Restore default camera settings
+	if (SpringCam && Camera && !bIsFirstPersonMode)
+	{
+		// Restore previous camera settings
+		SpringCam->TargetArmLength = DefaultTargetArmLength;
+		SpringCam->SetRelativeLocation(DefaultRelativeLocation);
+		SpringCam->SetRelativeRotation(DefaultRelativeRotation);
+		
+		// Re-enable camera lag if it was disabled
+		SpringCam->bEnableCameraLag = true;
+	}
+	
+	UE_LOG(LogTemp, Warning, TEXT("Exited Cover State - Camera restored to default"));
 }
 
 void ASaoirse::MoveForwardCompleted(const FInputActionInstance& Inst)
@@ -562,6 +612,152 @@ void ASaoirse::MoveRightCompleted(const FInputActionInstance& Inst)
 {
 	CurrentRightInput = 0.0f;
 }
+
+void ASaoirse::CameraAdjustToGroundLevel(float DeltaSeconds)
+{
+	// Smooth camera transitions for cover state
+	if (SpringCam && !bIsFirstPersonMode)
+	{
+		float InterpSpeed = 5.0f; // Adjust for faster/slower transitions
+		
+		if (bIsInCoverState)
+		{
+			// Smoothly interpolate to cover camera settings
+			float CurrentArmLength = SpringCam->TargetArmLength;
+			float NewArmLength = FMath::FInterpTo(CurrentArmLength, CoverTargetArmLength, DeltaSeconds, InterpSpeed);
+			SpringCam->TargetArmLength = NewArmLength;
+			
+			FVector CurrentLocation = SpringCam->GetRelativeLocation();
+			FVector NewLocation = FMath::VInterpTo(CurrentLocation, CoverRelativeLocation, DeltaSeconds, InterpSpeed);
+			SpringCam->SetRelativeLocation(NewLocation);
+			
+			FRotator CurrentRotation = SpringCam->GetRelativeRotation();
+			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, CoverRelativeRotation, DeltaSeconds, InterpSpeed);
+			SpringCam->SetRelativeRotation(NewRotation);
+		}
+		else
+		{
+			// Smoothly interpolate back to default camera settings
+			float CurrentArmLength = SpringCam->TargetArmLength;
+			if (!FMath::IsNearlyEqual(CurrentArmLength, DefaultTargetArmLength, 1.0f))
+			{
+				float NewArmLength = FMath::FInterpTo(CurrentArmLength, DefaultTargetArmLength, DeltaSeconds, InterpSpeed);
+				SpringCam->TargetArmLength = NewArmLength;
+			}
+			
+			FVector CurrentLocation = SpringCam->GetRelativeLocation();
+			if (!CurrentLocation.Equals(DefaultRelativeLocation, 1.0f))
+			{
+				FVector NewLocation = FMath::VInterpTo(CurrentLocation, DefaultRelativeLocation, DeltaSeconds, InterpSpeed);
+				SpringCam->SetRelativeLocation(NewLocation);
+			}
+			
+			FRotator CurrentRotation = SpringCam->GetRelativeRotation();
+			if (!CurrentRotation.Equals(DefaultRelativeRotation, 1.0f))
+			{
+				FRotator NewRotation = FMath::RInterpTo(CurrentRotation, DefaultRelativeRotation, DeltaSeconds, InterpSpeed);
+				SpringCam->SetRelativeRotation(NewRotation);
+			}
+		}
+	}
+}
+
+bool ASaoirse::IsWallEdgeDetected(const FVector& Direction)
+{
+	if (CoverWallNormal.IsZero()) return false;
+	
+	FVector StartLocation = GetActorLocation();
+	FVector OffsetStartLocation = StartLocation + (FVector::RightVector * 70.0f); // Start trace slightly ahead
+
+	DrawDebugLine(GetWorld(), StartLocation, OffsetStartLocation, FColor::Green, false, 1.0f, 0, 1.5f);
+	
+	// Perform multiple traces to detect wall edge
+	FCollisionQueryParams TraceParams;
+	TraceParams.AddIgnoredActor(this);
+	
+	// Trace 1: Check if wall continues in the movement direction
+	FVector TraceStart = OffsetStartLocation;
+	FVector TraceEnd = TraceStart + (-CoverWallNormal * 100.0f); // Trace toward where wall should be
+	
+	FHitResult HitResult;
+	bool bWallContinues = GetWorld()->LineTraceSingleByChannel(
+		HitResult, TraceStart, TraceEnd, ECC_Visibility, TraceParams);
+	
+	// Debug: Draw the edge detection trace
+	FColor LineColor = bWallContinues ? FColor::Blue : FColor::Orange;
+	DrawDebugLine(GetWorld(), TraceStart, TraceEnd, LineColor, false, 1.0f, 0, 1.5f);
+	
+	// Trace 2: Check at a slightly higher position to ensure wall continues vertically
+	FVector UpperTraceStart = TraceStart + FVector(0, 0, EdgeDetectionHeight);
+	FVector UpperTraceEnd = UpperTraceStart + (-CoverWallNormal * 100.0f);
+	
+	FHitResult UpperHitResult;
+	bool bUpperWallContinues = GetWorld()->LineTraceSingleByChannel(
+		UpperHitResult, UpperTraceStart, UpperTraceEnd, ECC_Visibility, TraceParams);
+	
+	// Debug: Draw the upper edge detection trace
+	FColor UpperLineColor = bUpperWallContinues ? FColor::Blue : FColor::Orange;
+	DrawDebugLine(GetWorld(), UpperTraceStart, UpperTraceEnd, UpperLineColor, false, 1.0f, 0, 1.5f);
+	
+	// If either trace doesn't hit a wall, we've reached an edge
+	bool bEdgeDetected = false;
+	FVector EdgeLocation = FVector::ZeroVector;
+	
+	if (!bWallContinues || !bUpperWallContinues)
+	{
+		bEdgeDetected = true;
+		// Use the trace start position as the edge location
+		EdgeLocation = TraceStart;
+	}
+	
+	// Additional check: Ensure the wall normal is similar (same wall)
+	if (bWallContinues && bUpperWallContinues)
+	{
+		float NormalSimilarity = FVector::DotProduct(HitResult.Normal, CoverWallNormal);
+		float UpperNormalSimilarity = FVector::DotProduct(UpperHitResult.Normal, CoverWallNormal);
+		
+		// If the wall normal has changed significantly, we've reached a corner/edge
+		if (NormalSimilarity < 0.8f || UpperNormalSimilarity < 0.8f)
+		{
+			bEdgeDetected = true;
+			// Use the hit location where the normal changed
+			EdgeLocation = HitResult.Location;
+		}
+	}
+	
+	// Draw debug visualization for detected edges
+	if (bEdgeDetected)
+	{
+		// Draw a large red sphere at the edge location
+		DrawDebugSphere(GetWorld(), EdgeLocation, 25.0f, 8, FColor::Red, false, 2.0f, 0, 3.0f);
+		
+		// Draw a vertical line to make the edge more visible
+		FVector EdgeTop = EdgeLocation + FVector(0, 0, 100.0f);
+		FVector EdgeBottom = EdgeLocation - FVector(0, 0, 50.0f);
+		DrawDebugLine(GetWorld(), EdgeBottom, EdgeTop, FColor::Red, false, 2.0f, 0, 5.0f);
+		
+		// Draw an "X" marker at the edge
+		FVector CrossStart1 = EdgeLocation + FVector(20, 20, 0);
+		FVector CrossEnd1 = EdgeLocation + FVector(-20, -20, 0);
+		FVector CrossStart2 = EdgeLocation + FVector(20, -20, 0);
+		FVector CrossEnd2 = EdgeLocation + FVector(-20, 20, 0);
+		
+		DrawDebugLine(GetWorld(), CrossStart1, CrossEnd1, FColor::Red, false, 2.0f, 0, 4.0f);
+		DrawDebugLine(GetWorld(), CrossStart2, CrossEnd2, FColor::Red, false, 2.0f, 0, 4.0f);
+		
+		// Draw text label
+		DrawDebugString(GetWorld(), EdgeLocation + FVector(0, 0, 50), 
+			TEXT("WALL EDGE"), nullptr, FColor::White, 2.0f, false, 1.5f);
+		
+		// Optional: Draw an arrow showing the blocked direction
+		FVector ArrowStart = StartLocation;
+		FVector ArrowEnd = EdgeLocation;
+		DrawDebugDirectionalArrow(GetWorld(), ArrowStart, ArrowEnd, 30.0f, FColor::Red, false, 2.0f, 0, 3.0f);
+	}
+	
+	return bEdgeDetected;
+}
+
 
 ASaoirse::~ASaoirse()
 {
