@@ -679,8 +679,24 @@ void ASaoirse::CameraAdjustToGroundLevel(float DeltaSeconds)
 			FVector NewLocation = FMath::VInterpTo(CurrentLocation, CoverRelativeLocation, DeltaSeconds, InterpSpeed);
 			SpringCam->SetRelativeLocation(NewLocation);
 			
+			// Calculate camera rotation to face the wall
+			FRotator TargetCoverRotation = CoverRelativeRotation;
+			if (!CoverWallNormal.IsZero())
+			{
+				// Calculate direction from character to wall (opposite of wall normal)
+				FVector WallDirection = -CoverWallNormal;
+				WallDirection.Z = 0.0f; // Keep on horizontal plane
+				WallDirection.Normalize();
+				
+				// Convert wall direction to rotation
+				FRotator WallRotation = WallDirection.Rotation();
+				
+				// Set the camera to look at the wall with a slight downward angle
+				TargetCoverRotation = FRotator(-10.0f, WallRotation.Yaw, 0.0f);
+			}
+			
 			FRotator CurrentRotation = SpringCam->GetRelativeRotation();
-			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, CoverRelativeRotation, DeltaSeconds, InterpSpeed);
+			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetCoverRotation, DeltaSeconds, InterpSpeed);
 			SpringCam->SetRelativeRotation(NewRotation);
 		}
 		else
