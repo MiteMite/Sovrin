@@ -51,9 +51,8 @@ private:
 	float CoverTargetArmLength = 300.0f;  // Closer to character in cover
 	FVector CoverRelativeLocation = FVector(0.0f, 0.0f, 20.0f);  // Lower, near ground level
 	FRotator CoverRelativeRotation = FRotator(-10.0f, 180.0f, 0.0f);  // Nearly horizontal, looking at character
-
+	
 	//Cover camera functions
-
 	void CameraAdjustToGroundLevel(float DeltaSeconds);
 
 	//Mouse sensitivity settings
@@ -79,8 +78,10 @@ private:
 	FVector LastDetectedEdgeLocation = FVector::ZeroVector; // Store the last detected edge location
 	bool bIsMovementBlockedByEdge = false; // Track if the edge currently blocks movement
 	FVector EdgeDetectionDirection = FVector::ZeroVector; // Direction where edge was detected
-	float EdgeCameraOffsetDistance = 30.0f; // How much to offset the camera when edge is detected
-
+	float EdgeCameraOffsetDistance = 200.0f; // How much to offset the camera when edge is detected
+	float EdgeCameraLookAheadDistance = 200.0f; // How far ahead the camera should look when edge is detected
+	float EdgeCameraTransitionSpeed = 8.0f; // Speed of camera transition when edge is detected/lost
+	
 	// Edge detection function
 	UFUNCTION()
 	bool IsWallEdgeDetected(const FVector& Direction, FVector& OutEdgeLocation) const;

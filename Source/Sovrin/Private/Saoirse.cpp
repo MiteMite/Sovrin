@@ -670,16 +670,53 @@ void ASaoirse::CameraAdjustToGroundLevel(float DeltaSeconds)
 		
 		if (bIsInCoverState)
 		{
-			// Smoothly interpolate to cover camera settings
-			float CurrentArmLength = SpringCam->TargetArmLength;
-			float NewArmLength = FMath::FInterpTo(CurrentArmLength, CoverTargetArmLength, DeltaSeconds, InterpSpeed);
-			SpringCam->TargetArmLength = NewArmLength;
+			// Check for edge detection in the current movement direction
+			FVector EdgeLocation;
+			FVector MovementDirection = FVector::ZeroVector;
+			bool bEdgeDetected = false;
 			
-			FVector CurrentLocation = SpringCam->GetRelativeLocation();
-			FVector NewLocation = FMath::VInterpTo(CurrentLocation, CoverRelativeLocation, DeltaSeconds, InterpSpeed);
-			SpringCam->SetRelativeLocation(NewLocation);
+			// Determine current movement direction
+			if (CurrentForwardInput != 0.0f || CurrentRightInput != 0.0f)
+			{
+				FVector CameraForward = Camera ? Camera->GetForwardVector() : FVector::ForwardVector;
+				FVector CameraRight = Camera ? Camera->GetRightVector() : FVector::RightVector;
+				
+				// Project to ground plane
+				FVector CameraForwardGrounded = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
+				FVector CameraRightGrounded = FVector(CameraRight.X, CameraRight.Y, 0.0f).GetSafeNormal();
+				
+				MovementDirection = (CameraForwardGrounded * CurrentForwardInput) + (CameraRightGrounded * CurrentRightInput);
+				MovementDirection = MovementDirection.GetSafeNormal();
+				
+				// Check for edge in movement direction
+				bEdgeDetected = IsWallEdgeDetected(MovementDirection, EdgeLocation);
+			}
 			
-			// Calculate camera rotation to face the wall
+			// Calculate target camera position
+			FVector TargetCameraLocation = CoverRelativeLocation;
+			
+			if (bEdgeDetected)
+			{
+				// Calculate offset direction (parallel to wall, away from edge)
+				FVector WallParallel = FVector::CrossProduct(CoverWallNormal, FVector::UpVector).GetSafeNormal();
+				FVector CharacterToEdge = (EdgeLocation - GetActorLocation()).GetSafeNormal();
+				
+				// Determine which direction to offset the camera (away from the edge)
+				float EdgeSideAlignment = FVector::DotProduct(CharacterToEdge, WallParallel);
+				FVector CameraOffsetDirection = WallParallel * -FMath::Sign(EdgeSideAlignment);
+				
+				// Apply camera offset parallel to the wall to see beyond the edge
+				TargetCameraLocation = CoverRelativeLocation + (CameraOffsetDirection * EdgeCameraOffsetDistance);
+				
+				// Debug visualization
+				FVector WorldCameraOffset = GetActorLocation() + TargetCameraLocation;
+				DrawDebugLine(GetWorld(), GetActorLocation(), WorldCameraOffset, FColor::Cyan, false, 0.1f, 0, 2.0f);
+				DrawDebugSphere(GetWorld(), WorldCameraOffset, 15.0f, 8, FColor::Cyan, false, 0.1f, 0, 1.0f);
+				DrawDebugString(GetWorld(), WorldCameraOffset + FVector(0, 0, 30), 
+					TEXT("Edge Camera Offset"), nullptr, FColor::Cyan, 0.1f, false, 1.0f);
+			}
+			
+			// Calculate camera rotation (same for both normal cover and edge detection)
 			FRotator TargetCoverRotation = CoverRelativeRotation;
 			if (!CoverWallNormal.IsZero())
 			{
@@ -694,6 +731,15 @@ void ASaoirse::CameraAdjustToGroundLevel(float DeltaSeconds)
 				// Set the camera to look at the wall with a slight downward angle
 				TargetCoverRotation = FRotator(-10.0f, WallRotation.Yaw, 0.0f);
 			}
+			
+			// Smoothly interpolate to target camera settings
+			float CurrentArmLength = SpringCam->TargetArmLength;
+			float NewArmLength = FMath::FInterpTo(CurrentArmLength, CoverTargetArmLength, DeltaSeconds, InterpSpeed);
+			SpringCam->TargetArmLength = NewArmLength;
+			
+			FVector CurrentLocation = SpringCam->GetRelativeLocation();
+			FVector NewLocation = FMath::VInterpTo(CurrentLocation, TargetCameraLocation, DeltaSeconds, InterpSpeed);
+			SpringCam->SetRelativeLocation(NewLocation);
 			
 			FRotator CurrentRotation = SpringCam->GetRelativeRotation();
 			FRotator NewRotation = FMath::RInterpTo(CurrentRotation, TargetCoverRotation, DeltaSeconds, InterpSpeed);
@@ -725,6 +771,7 @@ void ASaoirse::CameraAdjustToGroundLevel(float DeltaSeconds)
 		}
 	}
 }
+
 
 bool ASaoirse::IsWallEdgeDetected(const FVector& Direction, FVector& OutEdgeLocation) const
 {
