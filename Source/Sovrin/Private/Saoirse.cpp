@@ -8,6 +8,8 @@
 #include "TimeTravelGlobal.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/GameMode.h"
+#include "Perception/AISense_Sight.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/GameModeBase.h"
 #include "Sovrin/Public/TimeTravel.h"
 #include "Kismet/GameplayStatics.h"
@@ -158,10 +160,10 @@ void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 			MovementDirection = FVector::ForwardVector; // world fallback
 		}
 
-		// If in cover state, check if input is pointing away from wall
+		// If in cover state, restrict movement to parallel to wall only
 		if (bIsInCoverState && !CoverWallNormal.IsZero())
 		{
-			// Check if input direction aligns with opposite wall normal (away from wall)
+			// Check if input is pointing away from wall to exit cover
 			float DotWithOppositeNormal = FVector::DotProduct(MovementDirection * InputValue, CoverWallNormal);
 			
 			if (DotWithOppositeNormal > 0.5f) // Input pointing away from wall with sufficient strength
@@ -173,29 +175,48 @@ void ASaoirse::MoveForward(const FInputActionInstance& Inst)
 				return;
 			}
 			
-			// Otherwise, restrict movement to sideways only
+			// Restrict movement to sideways only (parallel to wall)
 			FVector SidewaysDirection = FVector::CrossProduct(CoverWallNormal, FVector::UpVector).GetSafeNormal();
 			float SidewaysInput = FVector::DotProduct(MovementDirection, SidewaysDirection) * InputValue;
 			
-			// Check for wall edge in the sideways movement direction
+			// Only allow sideways movement - block forward/backward relative to wall
 			if (SidewaysInput != 0.0f)
 			{
 				FVector IntendedDirection = SidewaysDirection * FMath::Sign(SidewaysInput);
-				FVector EdgeCheckDirection = IntendedDirection * EdgeDetectionDistance;
+				FVector EdgeLocation;
 				
-				if (IsWallEdgeDetected(EdgeCheckDirection))
+				if (IsWallEdgeDetected(IntendedDirection, EdgeLocation))
 				{
-					// Edge detected, block movement in this direction
-					UE_LOG(LogTemp, Warning, TEXT("Wall edge detected - blocking movement"));
-					return;
+					// Calculate direction from character to edge
+					FVector CharacterToEdge = (EdgeLocation - GetActorLocation()).GetSafeNormal();
+					
+					// Project this onto the sideways direction to see which side the edge is on
+					float EdgeSideAlignment = FVector::DotProduct(CharacterToEdge, SidewaysDirection);
+					float MovementSideAlignment = FVector::DotProduct(IntendedDirection, SidewaysDirection);
+					
+					// If the edge is on the same side as the intended movement, block it
+					if (FMath::Sign(EdgeSideAlignment) == FMath::Sign(MovementSideAlignment))
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Wall edge detected - blocking movement toward edge"));
+						return;
+					}
+					else
+					{
+						// Edge is on the opposite side, allow movement
+						AddMovementInput(SidewaysDirection, SidewaysInput);
+					}
+				}
+				else
+				{
+					// No edge detected, allow normal sideways movement
+					AddMovementInput(SidewaysDirection, SidewaysInput);
 				}
 			}
-			
-			AddMovementInput(SidewaysDirection, SidewaysInput);
+			// If no sideways input, don't move at all
 			return;
 		}
 
-		// Normal movement logic continues...
+		// Normal movement logic continues for non-cover state...
 		FVector CameraRight = Camera ? Camera->GetRightVector() : FVector::RightVector;
 		FVector CameraRightGrounded = FVector(CameraRight.X, CameraRight.Y, 0.0f).GetSafeNormal();
 		
@@ -263,9 +284,10 @@ void ASaoirse::MoveRight(const FInputActionInstance& Inst)
 			MovementDirection = FVector::RightVector;
 		}
 
-		// If in cover state, check if input is pointing away from wall
+		// If in cover state, restrict movement to parallel to wall only
 		if (bIsInCoverState && !CoverWallNormal.IsZero())
 		{
+			// Check if input is pointing away from wall to exit cover
 			float DotWithOppositeNormal = FVector::DotProduct(MovementDirection * InputValue, CoverWallNormal);
 			
 			if (DotWithOppositeNormal > 0.5f)
@@ -276,29 +298,48 @@ void ASaoirse::MoveRight(const FInputActionInstance& Inst)
 				return;
 			}
 			
-			// Otherwise, restrict movement to sideways only
+			// Restrict movement to sideways only (parallel to wall)
 			FVector SidewaysDirection = FVector::CrossProduct(CoverWallNormal, FVector::UpVector).GetSafeNormal();
 			float SidewaysInput = FVector::DotProduct(MovementDirection, SidewaysDirection) * InputValue;
 			
-			// Check for wall edge in the sideways movement direction
+			// Only allow sideways movement - block forward/backward relative to wall
 			if (SidewaysInput != 0.0f)
 			{
 				FVector IntendedDirection = SidewaysDirection * FMath::Sign(SidewaysInput);
-				FVector EdgeCheckDirection = IntendedDirection * EdgeDetectionDistance;
+				FVector EdgeLocation;
 				
-				if (IsWallEdgeDetected(EdgeCheckDirection))
+				if (IsWallEdgeDetected(IntendedDirection, EdgeLocation))
 				{
-					// Edge detected, block movement in this direction
-					UE_LOG(LogTemp, Warning, TEXT("Wall edge detected - blocking movement"));
-					return;
+					// Calculate direction from character to edge
+					FVector CharacterToEdge = (EdgeLocation - GetActorLocation()).GetSafeNormal();
+					
+					// Project this onto the sideways direction to see which side the edge is on
+					float EdgeSideAlignment = FVector::DotProduct(CharacterToEdge, SidewaysDirection);
+					float MovementSideAlignment = FVector::DotProduct(IntendedDirection, SidewaysDirection);
+					
+					// If the edge is on the same side as the intended movement, block it
+					if (FMath::Sign(EdgeSideAlignment) == FMath::Sign(MovementSideAlignment))
+					{
+						UE_LOG(LogTemp, Warning, TEXT("Wall edge detected - blocking movement toward edge"));
+						return;
+					}
+					else
+					{
+						// Edge is on the opposite side, allow movement
+						AddMovementInput(SidewaysDirection, SidewaysInput);
+					}
+				}
+				else
+				{
+					// No edge detected, allow normal sideways movement
+					AddMovementInput(SidewaysDirection, SidewaysInput);
 				}
 			}
-			
-			AddMovementInput(SidewaysDirection, SidewaysInput);
+			// If no sideways input, don't move at all
 			return;
 		}
 
-		// Normal movement logic continues...
+		// Normal movement logic continues for non-cover state...
 		FVector CameraForward = Camera ? Camera->GetForwardVector() : FVector::ForwardVector;
 		FVector CameraForwardGrounded = FVector(CameraForward.X, CameraForward.Y, 0.0f).GetSafeNormal();
 		
@@ -348,11 +389,6 @@ void ASaoirse::MoveRight(const FInputActionInstance& Inst)
 		CurrentRightInput = 0.0f;
 	}
 }
-
-
-
-
-
 
 
 void ASaoirse::CrouchProne(const FInputActionInstance& Inst)
@@ -502,6 +538,12 @@ void ASaoirse::FirstPersonLook(const FInputActionInstance& Inst)
 
 void ASaoirse::UpdateRotationBasedOnMovement()
 {
+	// Don't rotate the character when in cover state
+	if (bIsInCoverState)
+	{
+		return;
+	}
+
 	if (UCapsuleComponent* Capsule = GetCapsuleComponent())
 	{
 		// Get the character's current velocity
@@ -557,31 +599,37 @@ void ASaoirse::TogglePauseMenu(const FInputActionInstance& Inst)
 
 void ASaoirse::EnterCoverState()
 {
-	UE_LOG(LogTemp, Display, TEXT("Entering cover state"));
 	bIsInCoverState = true;
-
-	// Adjust camera for cover state
-	if (SpringCam && Camera)
+	
+	// Only rotate character to face the wall when entering cover
+	if (!CoverWallNormal.IsZero())
 	{
-		// Store current camera settings before changing them
-		if (!bIsFirstPersonMode)
-		{
-			DefaultTargetArmLength = SpringCam->TargetArmLength;
-			DefaultRelativeLocation = SpringCam->GetRelativeLocation();
-			DefaultRelativeRotation = SpringCam->GetRelativeRotation();
-		}
+		// Calculate the direction to face the wall (opposite of wall normal)
+		FVector FaceWallDirection = -CoverWallNormal;
+		FaceWallDirection.Z = 0.0f; // Keep rotation on horizontal plane only
+		FaceWallDirection.Normalize();
 		
-		// Set cover camera position - ground level and looking at character
-		SpringCam->TargetArmLength = CoverTargetArmLength;
-		SpringCam->SetRelativeLocation(CoverRelativeLocation);
-		SpringCam->SetRelativeRotation(CoverRelativeRotation);
+		// Create rotation from direction
+		FRotator TargetRotation = FaceWallDirection.Rotation();
 		
-		// Optionally disable camera lag for immediate response in cover
-		SpringCam->bEnableCameraLag = false;
+		// Set the character's rotation to face the wall immediately when entering cover
+		SetActorRotation(TargetRotation);
+		
+		// Debug visualization
+		FVector CharacterLocation = GetActorLocation();
+		FVector WallDirection = CharacterLocation + (FaceWallDirection * 100.0f);
+		
+		DrawDebugLine(GetWorld(), CharacterLocation, WallDirection, FColor::Green, false, 2.0f, 0, 3.0f);
+		DrawDebugString(GetWorld(), CharacterLocation + FVector(0, 0, 100), 
+			TEXT("Character Facing Wall"), nullptr, FColor::Green, 2.0f, false, 1.5f);
+		
+		UE_LOG(LogTemp, Log, TEXT("Character rotated to face wall. Wall Normal: %s, Face Direction: %s"), 
+			*CoverWallNormal.ToString(), *FaceWallDirection.ToString());
 	}
 	
-	UE_LOG(LogTemp, Warning, TEXT("Entered Cover State - Camera adjusted to ground level"));
+	UE_LOG(LogTemp, Log, TEXT("Entered cover state"));
 }
+
 
 void ASaoirse::ExitCoverState()
 {
@@ -662,12 +710,16 @@ void ASaoirse::CameraAdjustToGroundLevel(float DeltaSeconds)
 	}
 }
 
-bool ASaoirse::IsWallEdgeDetected(const FVector& Direction)
+bool ASaoirse::IsWallEdgeDetected(const FVector& Direction, FVector& OutEdgeLocation) const
 {
 	if (CoverWallNormal.IsZero()) return false;
 	
 	FVector StartLocation = GetActorLocation();
-	FVector OffsetStartLocation = StartLocation + (FVector::RightVector * 70.0f); // Start trace slightly ahead
+	
+	// Use the movement direction to offset the trace start position
+	// This checks for edges ahead of where the character is trying to move
+
+	FVector OffsetStartLocation = StartLocation + (Direction.GetSafeNormal() * 70.0f);
 
 	DrawDebugLine(GetWorld(), StartLocation, OffsetStartLocation, FColor::Green, false, 1.0f, 0, 1.5f);
 	
@@ -725,42 +777,15 @@ bool ASaoirse::IsWallEdgeDetected(const FVector& Direction)
 		}
 	}
 	
-	// Draw debug visualization for detected edges
 	if (bEdgeDetected)
 	{
-		// Draw a large red sphere at the edge location
+		OutEdgeLocation = EdgeLocation;
+		// Debug visualization
 		DrawDebugSphere(GetWorld(), EdgeLocation, 25.0f, 8, FColor::Red, false, 2.0f, 0, 3.0f);
-		
-		// Draw a vertical line to make the edge more visible
-		FVector EdgeTop = EdgeLocation + FVector(0, 0, 100.0f);
-		FVector EdgeBottom = EdgeLocation - FVector(0, 0, 50.0f);
-		DrawDebugLine(GetWorld(), EdgeBottom, EdgeTop, FColor::Red, false, 2.0f, 0, 5.0f);
-		
-		// Draw an "X" marker at the edge
-		FVector CrossStart1 = EdgeLocation + FVector(20, 20, 0);
-		FVector CrossEnd1 = EdgeLocation + FVector(-20, -20, 0);
-		FVector CrossStart2 = EdgeLocation + FVector(20, -20, 0);
-		FVector CrossEnd2 = EdgeLocation + FVector(-20, 20, 0);
-		
-		DrawDebugLine(GetWorld(), CrossStart1, CrossEnd1, FColor::Red, false, 2.0f, 0, 4.0f);
-		DrawDebugLine(GetWorld(), CrossStart2, CrossEnd2, FColor::Red, false, 2.0f, 0, 4.0f);
-		
-		// Draw text label
 		DrawDebugString(GetWorld(), EdgeLocation + FVector(0, 0, 50), 
 			TEXT("WALL EDGE"), nullptr, FColor::White, 2.0f, false, 1.5f);
-		
-		// Optional: Draw an arrow showing the blocked direction
-		FVector ArrowStart = StartLocation;
-		FVector ArrowEnd = EdgeLocation;
-		DrawDebugDirectionalArrow(GetWorld(), ArrowStart, ArrowEnd, 30.0f, FColor::Red, false, 2.0f, 0, 3.0f);
 	}
 	
 	return bEdgeDetected;
-}
-
-
-ASaoirse::~ASaoirse()
-{
-	
 }
 

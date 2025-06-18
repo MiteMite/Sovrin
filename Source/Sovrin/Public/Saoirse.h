@@ -2,14 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
-#include "GameFramework/CharacterMovementComponent.h"
-#include "Enhancedinputcomponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputMappingContext.h"
-#include "InputActionValue.h"
 #include "TimeTravel.h"
 #include "TimeTravelGlobal.h"
-#include "Perception/AISense_Sight.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -46,8 +42,8 @@ private:
 
 	//Camera system variables
 	bool bIsFirstPersonMode = false;
-	float DefaultTargetArmLength = 900.0f;										//camera is 900 units away from the character
-	FVector DefaultRelativeLocation = FVector(0.0f, 0.0f, 50.0f);	//camera is 50 units above the character
+	float DefaultTargetArmLength = 900.0f;										//the camera is 900 units away from the character
+	FVector DefaultRelativeLocation = FVector(0.0f, 0.0f, 50.0f);	//the camera is 50 units above the character
 	FRotator DefaultRelativeRotation = FRotator(-60.0f, 180.0f, 0.0f); //Looks down 60 degrees, and is rotated 180 degrees around the Y axis
 	FRotator LastKnownCameraRotation = FRotator::ZeroRotator;
 	
@@ -64,25 +60,30 @@ private:
 	UPROPERTY(EditAnywhere, Category = "Camera", meta = (ClampMin = "0.1", ClampMax = "5.0"))
 	float MouseSensitivity = 1.0f;
 
-	//Pitch limits for first person camera
+	//Pitch limits for first-person camera
 	UPROPERTY(EditAnywhere, Category = "Camera", meta = (ClampMin = "-90", ClampMax = "0.0"))
 	float FirstPersonPitchMin = -90.0f;
 	UPROPERTY(EditAnywhere, Category = "Camera", meta = (ClampMin = "0.0", ClampMax = "90"))
 	float FirstPersonPitchMax = 90.0f;
 
 	//Input variables
-	bool bIsInCoverState = false; //tracks if character is currently in cover
+	bool bIsInCoverState = false; //tracks if a character is currently in cover
 	float CurrentForwardInput = 0.0f;
 	float CurrentRightInput = 0.0f;
 	FVector CoverWallNormal = FVector::ZeroVector; // Store the wall normal when in cover
+	float CoverExitThreshold = 0.85f; // How perpendicular movement must be to exit cover (0.85 = ~32 degree cone)
 	
 	// Edge detection parameters
 	float EdgeDetectionDistance = 50.0f; // How far ahead to check for wall edges
 	float EdgeDetectionHeight = 50.0f; // Height offset for edge detection traces
+	FVector LastDetectedEdgeLocation = FVector::ZeroVector; // Store the last detected edge location
+	bool bIsMovementBlockedByEdge = false; // Track if the edge currently blocks movement
+	FVector EdgeDetectionDirection = FVector::ZeroVector; // Direction where edge was detected
+	float EdgeCameraOffsetDistance = 30.0f; // How much to offset the camera when edge is detected
 
 	// Edge detection function
 	UFUNCTION()
-	bool IsWallEdgeDetected(const FVector& Direction);
+	bool IsWallEdgeDetected(const FVector& Direction, FVector& OutEdgeLocation) const;
 
 	//Input functions
 	void MoveForward(const FInputActionInstance& Inst);
@@ -101,7 +102,6 @@ private:
 
 	
 protected:
-	virtual ~ASaoirse() override;
 
 	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
 	UEnhancedInputComponent* Input;
