@@ -98,6 +98,7 @@ private:
 	void ExitCoverState();
 	UFUNCTION()
 	void TogglePauseMenu(const FInputActionInstance& Inst);
+	void ToggleInventory(const FInputActionInstance& Inst);
 	void MoveForwardCompleted(const FInputActionInstance& Inst);
 	void MoveRightCompleted(const FInputActionInstance& Inst);
 
@@ -130,4 +131,7 @@ protected:
 
 	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
 	class UInputAction* InputPauseMenu;
+
+	UPROPERTY(EditAnywhere, Category = "EnhancedInput")
+	class UInputAction* InputInventory;
 };

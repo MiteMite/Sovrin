@@ -28,11 +28,15 @@ ASaoirse::ASaoirse()
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputFirstPersonToggleObject(TEXT("/Game/SovrinClasses/InputMapping/IA_FPSToggle.IA_FPSToggle"));
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputLookObject(TEXT("/Game/SovrinClasses/InputMapping/IA_FPSLook.IA_FPSLook"));
 	static ConstructorHelpers::FObjectFinder<UInputAction> UInputPauseMenuObject(TEXT("/Game/SovrinClasses/InputMapping/IA_PauseMenu.IA_PauseMenu"));
+	static ConstructorHelpers::FObjectFinder<UInputAction> UInputInventoryObject(TEXT("/Game/SovrinClasses/InputMapping/IA_Inventory.IA_Inventory"));
+	
+	//Load Assets
 	static ConstructorHelpers::FObjectFinder<USkeletalMesh> USkeletalMeshObject(TEXT("/Game/Characters/Mannequins/Meshes/SKM_Manny.SKM_Manny"));
 	static ConstructorHelpers::FObjectFinder<UAnimBlueprint> UAnimationClass(TEXT("/Game/Characters/Mannequins/Animations/ABP_Manny.ABP_Manny"));
 
 	this->GetCharacterMovement()->NavAgentProps.bCanCrouch = true;
 
+	//Assign input objects
 	InputMapping = InputMappingContextObject.Object;
 	InputForwardAction = UInputForwardObject.Object;
 	InputRightAction = UInputRightObject.Object;
@@ -41,6 +45,7 @@ ASaoirse::ASaoirse()
 	InputFirstPersonToggle = UInputFirstPersonToggleObject.Object;
 	InputLook = UInputLookObject.Object;
 	InputPauseMenu = UInputPauseMenuObject.Object;
+	InputInventory = UInputInventoryObject.Object;
 	
 	this->GetMesh()->SetSkeletalMeshAsset(USkeletalMeshObject.Object);
 	this->GetMesh()->SetRelativeLocation(FVector(0.0f, 0.0f, -40.0f));
@@ -133,7 +138,9 @@ void ASaoirse::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 		//Mouse look binding
 		Input->BindAction(InputLook, ETriggerEvent::Triggered, this, &ASaoirse::FirstPersonLook);
 
+		//UI interaction input binding
 		Input->BindAction(InputPauseMenu, ETriggerEvent::Started, this, &ASaoirse::TogglePauseMenu);
+		Input->BindAction(InputInventory, ETriggerEvent::Started, this, &ASaoirse::ToggleInventory);
 	}
 }
 
@@ -596,6 +603,12 @@ void ASaoirse::TogglePauseMenu(const FInputActionInstance& Inst)
 		}
 	}
 }
+
+void ASaoirse::ToggleInventory(const FInputActionInstance& Inst)
+{
+	UE_LOG(LogTemp, Display, TEXT("Toggle Inventory"));
+}
+
 
 void ASaoirse::EnterCoverState()
 {
