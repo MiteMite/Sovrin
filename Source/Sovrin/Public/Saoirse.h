@@ -1,11 +1,14 @@
 ﻿#pragma once
 
 #include "CoreMinimal.h"
+#include "Consumable.h"
 #include "GameFramework/Character.h"
 #include "EnhancedInputSubsystems.h"
+#include "Equipment.h"
 #include "InputMappingContext.h"
 #include "TimeTravel.h"
 #include "TimeTravelGlobal.h"
+#include "Weapon.h"
 #include "Perception/AIPerceptionStimuliSourceComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -102,6 +105,14 @@ private:
 	void MoveForwardCompleted(const FInputActionInstance& Inst);
 	void MoveRightCompleted(const FInputActionInstance& Inst);
 
+	//Inventory variables
+	UPROPERTY(EditAnywhere, Category = "Inventory")
+	TArray<AWeapon*> Weapons;
+	UPROPERTY(EditAnywhere, Category = "Inventory")
+	TArray<AConsumable*> Consumables;
+	UPROPERTY(EditAnywhere, Category = "Inventory")
+	TArray<AEquipment*> Equipment;
+	
 	
 protected:
 
