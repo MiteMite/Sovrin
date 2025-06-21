@@ -4,23 +4,38 @@
 #include "Sovrin/Public/ProjectileLauncher.h"
 
 
-// Sets default values
+
 AProjectileLauncher::AProjectileLauncher()
 {
-	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
-	PrimaryActorTick.bCanEverTick = true;
+
 }
 
-// Called when the game starts or when spawned
-void AProjectileLauncher::BeginPlay()
+bool AProjectileLauncher::CanEquip(AActor* Character) const
 {
-	Super::BeginPlay();
+	return true;
+}
+
+bool AProjectileLauncher::Equip(AActor* Character)
+{
+	return true;
+}
+
+bool AProjectileLauncher::Unequip(AActor* Character)
+{
+	return true;
+}
+
+bool AProjectileLauncher::Pickup()
+{
+	return true;
+}
+
+void AProjectileLauncher::OnEquipped(AActor* Character)
+{
 	
 }
 
-// Called every frame
-void AProjectileLauncher::Tick(float DeltaTime)
+void AProjectileLauncher::OnUnequipped(AActor* Character)
 {
-	Super::Tick(DeltaTime);
+	
 }
-
